@@ -1,0 +1,10 @@
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
+
+import 'authProvider.dart';
+
+class AllProviders {
+  List<SingleChildWidget> allProvider = [
+    ChangeNotifierProvider(create: (_) => AuthProvider()),
+  ];
+}
