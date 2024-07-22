@@ -160,6 +160,8 @@ class AuthProvider with ChangeNotifier {
         pref.setBool(isUserLoginKey, true);
         pref.setString(accessTokenKey, result['access_token']);
         pref.setString(userIdKey, result['id']);
+        log('response of accesstoken===>>>>>${pref.getString("access_token")}');
+        log('response of userid====>>>>>${pref.getString("id")}');
         _isLogin = true;
         notifyListeners();
       } else {

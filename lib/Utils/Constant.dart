@@ -38,7 +38,7 @@ const String currency = '£';
 const String accessTokenKey = 'access_token';
 const String userIdKey = 'id';
 const String userEmailPhoneKey = 'emailPhone';
-const String userEmailKey = 'email';
+const String userEmailKeyy = 'email';
 const String isUserLoginKey = 'isUserLoginKey';
 const String isInitKey = 'isInit';
 

@@ -1,6 +1,11 @@
+import 'dart:developer';
+
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Providers/authProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
+import 'package:cleanup_mobile/Utils/customLoader.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -540,4 +545,31 @@ class _MyWidgetState extends State<MyWidget> {
                   borderRadius: BorderRadius.circular(10))),
         ),
       );
+  Future<void> onLogin() async {
+    var pro = Provider.of<AuthProvider>(context, listen: false);
+    var data = {};
+    if (pro.lEmailController.text.isEmpty) {
+      customToast(context: context, msg: 'Email ID required', type: 0);
+    } else if (!emailExpression.hasMatch(pro.lEmailController.text)) {
+      customToast(context: context, msg: 'Enter valid Email ID', type: 0);
+    } else if (pro.lPassController.text.isEmpty) {
+      customToast(context: context, msg: 'Please enter password', type: 0);
+    } else if (pro.lPassController.text.length < 8) {
+      customToast(
+          context: context, msg: 'Please enter 8 digit password', type: 0);
+    } else {
+      data = {
+        'email': pro.emailController.text,
+        'password': pro.passController.text,
+      };
+
+      pro.login(context: context, data: data).then((value) {
+        if (pro.isLogin) {
+          log('Login Here-------------------- $data');
+          navPushRemove(context: context, action: HomeScreen());
+        }
+      });
+    }
+    // log('Login Here-------------------- $data');
+  }
 }
