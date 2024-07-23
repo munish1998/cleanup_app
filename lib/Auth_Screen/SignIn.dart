@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cleanup_mobile/Auth_Screen/Register.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
+import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/authProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +20,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool isPass = false;
+  bool isCPass = false;
   bool _isChecked1 = false;
   List<TextEditingController> _otpControllers =
       List.generate(4, (index) => TextEditingController());
@@ -400,15 +404,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 12,
                           ),
                           Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: _buildOtpFields()),
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: _buildOtpFields(),
+                          ),
                           const SizedBox(
                             height: 25,
                           ),
                           GestureDetector(
-                            onTap: onVerify,
-                            // Verify code logic here
-
+                            onTap: () => onVerify(
+                                context, authProvider.emailController.text),
                             child: Container(
                               height: 54,
                               width: 370,
@@ -417,13 +421,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.lightBlue.shade300,
                               ),
                               child: const Center(
-                                  child: Text(
-                                'Verify',
-                                style: TextStyle(
+                                child: Text(
+                                  'Verify',
+                                  style: TextStyle(
                                     fontSize: 20,
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              )),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -442,7 +448,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void onVerify() async {
+  void onVerify(BuildContext context, String email) async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
 
     // Collect OTP by combining the text from all controllers
@@ -454,45 +460,115 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     var data = {
-      'email': "munishrai.mr1998@gmail.com", // Adjust this if needed
+      'email': email,
       'otp': otp,
     };
 
-    if (pro.isForgot) {
-      pro.verifyOTP(context: context, data: data).then((value) {
-        if (pro.isVerify) {
-          // Navigate to ChangePassScreen or handle verification success
-          // navPush(context: context, action: ChangePassScreen());
-        }
-      }).catchError((error) {
-        log('Error verifying OTP: $error');
-        customToast(context: context, msg: 'Verification failed', type: 0);
-      });
-    } else {
-      pro.verifyOTP(context: context, data: data).then((value) {
-        if (pro.isVerify) {
-          // Navigate to DashboardScreen or handle verification success
-          // navPushRemove(context: context, action: DashboardScreen());
-        }
-      }).catchError((error) {
-        log('Error verifying OTP: $error');
-        customToast(context: context, msg: 'Verification failed', type: 0);
-      });
-    }
+    try {
+      // Call the verifyOTP function and get the reset token
+      String? resetToken = await pro.verifyOTP(context: context, data: data);
+      log('Reset token received: $resetToken');
 
-    log('OTP Verified Here------------${pro.isForgot}-------- $data');
+      if (resetToken != null) {
+        // Proceed with UI update
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) {
+            return Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                return Container(
+                  height: 400,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 25),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Change Password',
+                            style: TextStyle(
+                              color: AppColor.backgroundcontainerColor,
+                              fontSize: 20,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          const SizedBox(height: 30),
+                          textfields(
+                            context: context,
+                            controller: authProvider.passController,
+                            hint: 'Password',
+                            icon: isPass
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            ispas: isPass,
+                            hintTextColor: Colors.grey,
+                            index: 5,
+                          ),
+                          const SizedBox(height: 10),
+                          textfields(
+                            context: context,
+                            controller: authProvider.cPassController,
+                            hint: 'Confirm password',
+                            icon: isCPass
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            ispas: isCPass,
+                            hintTextColor: Colors.grey,
+                            index: 6,
+                          ),
+                          const SizedBox(height: 10),
+                          InkWell(
+                            onTap: () =>
+                                onForgetpassword(), // Pass the reset token here
+                            child: Container(
+                              height: 54,
+                              width: 370,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: AppColor.rank1Color,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Reset Password',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: AppColor.backgroundcontainerColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      }
+      //  else {
+      //   customToast(
+      //       context: context, msg: 'Invalid OTP. Please try again.', type: 0);
+      // }
+    } catch (e) {
+      customToast(context: context, msg: 'Error verifying OTP.', type: 0);
+      debugPrint('Error: $e');
+    }
   }
 
   Future<void> onLogin() async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
     var data = {};
-    if (pro.lEmailController.text.isEmpty) {
+    if (pro.emailController.text.isEmpty) {
       customToast(context: context, msg: 'Email ID required', type: 0);
-    } else if (!emailExpression.hasMatch(pro.lEmailController.text)) {
+    } else if (!emailExpression.hasMatch(pro.emailController.text)) {
       customToast(context: context, msg: 'Enter valid Email ID', type: 0);
-    } else if (pro.lPassController.text.isEmpty) {
+    } else if (pro.passController.text.isEmpty) {
       customToast(context: context, msg: 'Please enter password', type: 0);
-    } else if (pro.lPassController.text.length < 8) {
+    } else if (pro.passController.text.length < 8) {
       customToast(
           context: context, msg: 'Please enter 8 digit password', type: 0);
     } else {
@@ -502,12 +578,50 @@ class _LoginScreenState extends State<LoginScreen> {
       };
 
       pro.login(context: context, data: data).then((value) {
-        if (pro.isLogin) {
-          log('Login Here-------------------- $data');
-          navPushRemove(context: context, action: HomeScreen());
-        }
+        log('Login Here-------------------- $data');
+        navPush(context: context, action: HomeScreen());
       });
     }
     // log('Login Here-------------------- $data');
+  }
+
+  void onForgetpassword() async {
+    var pro = Provider.of<AuthProvider>(context, listen: false);
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? resetToken =
+        pref.getString('reset_token'); // Retrieve the reset token
+    log('Response of reset_token====>>>>>$resetToken');
+
+    if (resetToken == null || resetToken.isEmpty) {
+      log('Reset token is null or empty');
+      commonToast(
+          msg: 'Reset token not found. Please try again.', color: Colors.red);
+      return;
+    }
+
+    if (pro.passController.text.isEmpty) {
+      log('Password is required');
+      commonToast(msg: 'Password is required', color: Colors.red);
+    } else if (pro.cPassController.text.isEmpty) {
+      log('Confirm password is required');
+      commonToast(msg: 'Confirm password is required', color: Colors.red);
+    } else if (pro.passController.text != pro.cPassController.text) {
+      log('Passwords do not match');
+      commonToast(msg: 'Passwords do not match', color: Colors.red);
+    } else {
+      var data = {
+        'email': "munishwebpristine@gmail.com",
+        'password': pro.passController.text,
+        'password_confirmation': pro.cPassController.text,
+        'reset_token': resetToken, // Use the reset token from SharedPreferences
+      };
+
+      pro.forgotPass(context: context, data: data).then((value) {
+        navPush(context: context, action: HomeScreen());
+      }).catchError((error) {
+        log('SignUp Error: $error');
+        commonToast(msg: 'SignUp Error: $error', color: Colors.red);
+      });
+    }
   }
 }

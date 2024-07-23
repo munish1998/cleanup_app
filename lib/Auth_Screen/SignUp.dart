@@ -1,4 +1,5 @@
 import 'package:cleanup_mobile/Auth_Screen/Login.dart';
+import 'package:cleanup_mobile/Auth_Screen/Register.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/cupertino.dart';
@@ -739,7 +740,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   InkWell(
                     onTap: () {
                       Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const MyWidget()),
+                        MaterialPageRoute(
+                            builder: (_) => const RegisterScreen()),
                       );
                     },
                     child: RichText(
@@ -822,16 +824,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return otpFields;
   }
 
-  void showCustomBottomModelSheet({required BuildContext context,required String text,required }) {
+  void showCustomBottomModelSheet(
+      {required BuildContext context, required String text, required}) {
     showBottomSheet(
       context: context,
       builder: (context) {
         return Container(
-              height: 400,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(17),
-                
-              ),
+          height: 400,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(17),
+          ),
         );
       },
     );

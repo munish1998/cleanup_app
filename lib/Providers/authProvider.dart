@@ -118,7 +118,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> signUp(
       {required BuildContext context, required Map data}) async {
     var url = Uri.parse(ApiServices.register);
-    showLoaderDialog(context, 'P...');
+    showLoaderDialog(context, 'Wait..');
     final response =
         await ApiClient().postData(context: context, url: url, body: data);
     var result = jsonDecode(response.body);
@@ -175,7 +175,41 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> verifyOTP(
+  Future<String?> verifyOTPpp(
+      {required BuildContext context,
+      required Map<String, String> data}) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    _isVerify = false;
+    var url = Uri.parse(ApiServices.verifyOtp);
+    showLoaderDialog(context, 'P..');
+    final response =
+        await ApiClient().postData(context: context, url: url, body: data);
+    var result = jsonDecode(response.body);
+    log('OTP Result---------->>>>   $result');
+    navPop(context: context);
+    if (response.statusCode == 200) {
+      if (result['code'] == 200) {
+        pref.setBool(isUserLoginKey, true);
+        pref.setString(accessTokenKey, result['access_token']);
+        pref.setString(userIdKey, result['user_id']);
+        _isVerify = true;
+        notifyListeners();
+        return result['reset_token']; // Return the reset token
+      } else {
+        customToast(context: context, msg: result['message'], type: 0);
+        _isVerify = false;
+        notifyListeners();
+        return null;
+      }
+    } else {
+      customToast(context: context, msg: result['message'], type: 0);
+      _isVerify = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<void> verifyOTPp(
       {required BuildContext context, required Map data}) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _isVerify = false;
@@ -233,6 +267,48 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<String?> verifyOTP(
+      {required BuildContext context,
+      required Map<String, String> data}) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    _isVerify = false;
+    var url = Uri.parse(ApiServices.verifyOtp);
+    showLoaderDialog(context, 'P..');
+    final response =
+        await ApiClient().postData(context: context, url: url, body: data);
+    var result = jsonDecode(response.body);
+    log('OTP Result---------->>>>   $result');
+    navPop(context: context);
+
+    if (response.statusCode == 200) {
+      if (result['success'] == true) {
+        // Store the reset token correctly
+        pref.setString('reset_token', result['reset_token'] ?? '');
+        pref.setBool(isUserLoginKey, true);
+        pref.setString(accessTokenKey, result['access_token'] ?? '');
+        pref.setString(userIdKey, result['user_id'] ?? '');
+
+        log('AccessToken: ${pref.getString(accessTokenKey)}');
+        log('UserID: ${pref.getString(userIdKey)}');
+        log('ResetToken: ${pref.getString('reset_token')}'); // Ensure this logs correctly
+
+        _isVerify = true;
+        notifyListeners();
+        return result['reset_token']; // Return the reset token
+      } else {
+        customToast(context: context, msg: result['message'], type: 0);
+        _isVerify = false;
+        notifyListeners();
+        return null;
+      }
+    } else {
+      customToast(context: context, msg: result['message'], type: 0);
+      _isVerify = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<void> verifOTP(
       {required BuildContext context, required Map data}) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -277,7 +353,7 @@ class AuthProvider with ChangeNotifier {
     navPop(context: context);
     if (response.statusCode == 200) {
       if (result['code'] == 200) {
-        _uId = result['user_id'];
+        _uId = result['id'];
         _isForgot = true;
         notifyListeners();
       } else {

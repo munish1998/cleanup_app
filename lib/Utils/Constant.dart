@@ -37,6 +37,7 @@ const String currency = '£';
 // const String currency = '₹';
 const String accessTokenKey = 'access_token';
 const String userIdKey = 'id';
+const String resetToken = 'reset_token';
 const String userEmailPhoneKey = 'emailPhone';
 const String userEmailKeyy = 'email';
 const String isUserLoginKey = 'isUserLoginKey';
