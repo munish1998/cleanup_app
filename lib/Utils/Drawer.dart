@@ -88,7 +88,7 @@ class _AppDrawerState extends State<AppDrawer> {
             InkWell(
               onTap: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => NewTask()));
+                    MaterialPageRoute(builder: (context) => CreateTask()));
               },
               child: _listContent(
                 icon: Icons.add,

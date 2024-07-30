@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -138,40 +140,82 @@ class ApiClient {
     }
   }
 
-  Future<http.Response> postDataByToken(
-      {required BuildContext context,
-      required Uri url,
-      required Map body,
-      File? imageFile}) async {
+  Future<http.Response> postDatat({
+    required BuildContext context,
+    required Uri url,
+    required Map<String, String> body,
+  }) async {
+    var headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      var header = {
-        'access_token': prefs.getString(accessTokenKey).toString(),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      };
-      // log('Header::---->>>  $header');
-      // log('body::---->>>  $body');
-      final response = await http.post(url, body: body, headers: header);
-      // log('Response__POST___====>>${response.body.toString()}');
+      final response = await http.post(url, body: body, headers: headers);
+
+      // Check for HTTP errors
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('Failed to load data');
+      }
+
+      log('Response__POST___====>>${response.body.toString()}');
       return response;
     } on SocketException catch (e) {
-      switch (e.osError!.errorCode) {
-        // case 7:
-        //   commonAlert(context, 'No Internet Connection!');
-        //   break;
-        case 111:
-          commonAlert(context, 'Unable to connect to server!');
-          break;
-      }
-      log('Socket Exception thrown --> $e');
+      commonAlert(context, 'No Internet Connection!');
+      log('SocketException: $e');
       return http.Response(e.toString(), 1);
     } on TimeoutException catch (e) {
-      commonAlert(context, 'Please! Try Again');
-      log('TimeoutException thrown --> $e');
-
+      commonAlert(context, 'Request timed out. Please try again.');
+      log('TimeoutException: $e');
       return http.Response(e.toString(), 1);
     } catch (e) {
-      log(e.toString());
+      log('Exception: $e');
+      return http.Response(e.toString(), 1);
+    }
+  }
+
+  Future<http.Response> postDataByToken({
+    required BuildContext context,
+    required Uri url,
+    required Map<String, String> body,
+    File? imageFile,
+  }) async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString(accessTokenKey) ?? '';
+
+      if (token.isEmpty) {
+        log('Error: Access token is empty.');
+        throw Exception('Access token is missing.');
+      }
+
+      var header = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      };
+
+      log('Header::---->>>  $header');
+      log('Body::---->>>  $body');
+
+      final response = await http.post(url, body: body, headers: header);
+
+      log('Response__POST___====>>${response.body.toString()}');
+      log('Response status code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        return response;
+      } else {
+        throw Exception('Unexpected status code: ${response.statusCode}');
+      }
+    } on SocketException catch (e) {
+      log('Socket Exception thrown --> $e');
+      commonAlert(context, 'Unable to connect to server!');
+      return http.Response(e.toString(), 1);
+    } on TimeoutException catch (e) {
+      log('TimeoutException thrown --> $e');
+      commonAlert(context, 'Please! Try Again');
+      return http.Response(e.toString(), 1);
+    } catch (e) {
+      log('Exception thrown --> $e');
       return http.Response(e.toString(), 1);
     }
   }
@@ -210,6 +254,44 @@ class ApiClient {
     } catch (e) {
       log(e.toString());
       return http.Response(e.toString(), 1);
+    }
+  }
+
+  Future<dynamic> createTaskrepo({
+    required File beforeImage,
+    required File afterImage,
+    required String userid,
+    required String location,
+    required String description,
+    required String title,
+  }) async {
+    final request =
+        http.MultipartRequest('POST', Uri.parse(ApiServices.createTask));
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    // Create a multipart file from the file path
+
+    var before = await http.MultipartFile.fromPath('before', beforeImage.path);
+    var after = await http.MultipartFile.fromPath('after', afterImage.path);
+
+    request.files.add(before);
+    request.fields["location"] = location;
+    request.fields["title"] = title;
+    request.fields["description"] = description;
+
+    request.files.add(after);
+
+    // Add the file to the request
+
+    request.headers["Authorization"] = "Bearer $accessTokenKey";
+    var response = await request.send();
+    var responseBody = await response.stream.bytesToString();
+
+    log(responseBody);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(responseBody);
+    } else {
+      throw UnimplementedError();
     }
   }
 }

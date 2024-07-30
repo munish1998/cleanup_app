@@ -2,6 +2,7 @@
 
 import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
 import 'package:cleanup_mobile/MyTaskScreen/MyTaskScreen.dart';
+import 'package:cleanup_mobile/MyTaskScreen/myTask.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen1.dart';
 import 'package:cleanup_mobile/PendingTaskScreen/PendingScreen.dart';
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: InkWell(
                   onTap: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => MyTask()));
+                        MaterialPageRoute(builder: (context) => MyTaskList()));
                   },
                   child: Container(
                     height: 55,
@@ -339,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FloatingActionButton(
             onPressed: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const NewTask()));
+                  MaterialPageRoute(builder: (context) => const CreateTask()));
             },
             backgroundColor: Colors.blue.shade200,
             child: const Icon(

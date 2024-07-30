@@ -158,7 +158,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
           child: FloatingActionButton(
             onPressed: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const NewTask()));
+                  MaterialPageRoute(builder: (context) => const CreateTask()));
             },
             backgroundColor: AppColor.rank1Color,
             child: const Icon(

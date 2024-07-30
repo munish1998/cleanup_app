@@ -2,26 +2,20 @@ const String placeHolder =
     'https://research.cbc.osu.edu/sokolov.8/wp-content/uploads/2017/12/profile-icon-png-898.png';
 
 class ApiServices {
-  static const String baseUrl = 'https://www.webpristine.com/Touch-master/api/';
+  static const String baseUrl = 'https://webpristine.com/cleanup/public';
 
   static const String imageBaseUrl = baseUrl;
 
   // static const String baseUrl = 'http://lot.alobhadev.com/';
 
   //------------------------- Apis -----------------------------
-  static const String register =
-      'https://webpristine.com/cleanup/public/api/auth/register';
-  static const String login =
-      'https://webpristine.com/cleanup/public/api/auth/login';
-  static const String sendOtp =
-      'https://webpristine.com/cleanup/public/api/auth/send-otp';
-  static const String verifyOtp =
-      'https://webpristine.com/cleanup/public/api/auth/verify-otp';
-  static const String forgotPass =
-      'https://webpristine.com/cleanup/public/api/auth/reset-password';
-  static const String verifyForgotOtp =
-      '${baseUrl}user/verify_forgot_password_otp';
-  static const String changePassword = '${baseUrl}user/change_password';
+  static const String register = '${baseUrl}/api/auth/register';
+  static const String login = '${baseUrl}/api/auth/login';
+  static const String sendOtp = '${baseUrl}/api/auth/send-otp';
+  static const String verifyOtp = '${baseUrl}/api/auth/verify-otp';
+  static const String forgotPass = '${baseUrl}/api/auth/reset-password';
+  static const String createTask = '${baseUrl}/api/auth/task/create-task';
+  static const String getmytaskList = '${baseUrl}/api/auth/task/my-task';
   static const String getProfile = '${baseUrl}user/my_profile';
   static const String updateProfile = '${baseUrl}user/edit_profile';
   static const String updateProfileBG =

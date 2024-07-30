@@ -279,57 +279,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required bool ispas,
     required int index,
     required Color hintTextColor,
-  }) =>
-      Card(
-        elevation: 3,
-        child: Container(
-          height: 54,
-          width: 370,
-          decoration: BoxDecoration(
-              color: AppColor.backgroundcontainerColor,
-              borderRadius: BorderRadius.circular(15)),
-          child: TextFormField(
-            keyboardType: index == 2
-                ? TextInputType.emailAddress
-                : index == 3
-                    ? TextInputType.phone
-                    : TextInputType.text,
-            obscureText: ispas,
-            textCapitalization: TextCapitalization.none,
-            controller: controller,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            style: const TextStyle(color: Colors.grey),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.only(left: 15, top: 15),
-              hintText: hint,
-              hintStyle: TextStyle(color: hintTextColor),
-              isDense: true,
-              focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: AppColor.rank1Color),
-                borderRadius: BorderRadius.circular(17),
-              ),
-              border: InputBorder.none,
-              suffixIcon: (index == 5 || index == 6)
-                  ? InkWell(
-                      onTap: () {
-                        setState(() {
-                          if (index == 5) {
-                            isPass = !isPass;
-                          } else if (index == 6) {
-                            isCPass = !isCPass;
-                          }
-                        });
-                      },
-                      child: Icon(
-                        ispas ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.grey,
-                      ),
-                    )
-                  : null,
-            ),
+  }) {
+    return Card(
+      elevation: 3,
+      child: Container(
+        height: 60,
+        width: MediaQuery.of(context).size.width - 50,
+        decoration: BoxDecoration(
+          color: AppColor.backgroundcontainerColor,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: TextFormField(
+          keyboardType: index == 2
+              ? TextInputType.emailAddress
+              : index == 3
+                  ? TextInputType.phone
+                  : TextInputType.text,
+          obscureText: ispas,
+          textCapitalization: TextCapitalization.none,
+          controller: controller,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          style: const TextStyle(color: Colors.grey),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.only(left: 15, top: 15),
+            hintText: hint,
+            hintStyle: TextStyle(color: hintTextColor),
+            isDense: true,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            border: InputBorder.none,
+            suffixIcon: (index == 5 || index == 6)
+                ? InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (index == 5) {
+                          isPass = !isPass;
+                        } else if (index == 6) {
+                          isCPass = !isCPass;
+                        }
+                      });
+                    },
+                    child: Icon(
+                      ispas ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                  )
+                : null,
           ),
         ),
-      );
+      ),
+    );
+  }
 
   void onTap() {
     var pro = Provider.of<AuthProvider>(context, listen: false);
@@ -364,7 +364,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           msg: 'You must agree to the terms and privacy policy',
           color: Colors.red);
     } else {
-      data = {
+      var data = {
         'username': pro.usernameController.text,
         'name': pro.nameController.text,
         'email': pro.emailController.text,

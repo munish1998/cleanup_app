@@ -208,7 +208,7 @@ class _NewTask1State extends State<NewTask1> {
           child: FloatingActionButton(
             onPressed: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const NewTask()));
+                  MaterialPageRoute(builder: (context) => const CreateTask()));
             },
             backgroundColor: Colors.blue.shade200,
             child: const Icon(

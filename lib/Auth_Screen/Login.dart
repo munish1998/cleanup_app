@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
+import 'package:cleanup_mobile/MyTaskScreen/myTask.dart';
 import 'package:cleanup_mobile/Providers/authProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
@@ -566,7 +567,7 @@ class _MyWidgetState extends State<MyWidget> {
       pro.login(context: context, data: data).then((value) {
         if (pro.isLogin) {
           log('Login Here-------------------- $data');
-          navPushRemove(context: context, action: HomeScreen());
+          navPushRemove(context: context, action: MyTaskList());
         }
       });
     }
