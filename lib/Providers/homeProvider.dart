@@ -194,7 +194,7 @@ class TaskProviders with ChangeNotifier {
         var result = jsonDecode(response.body);
         if (result['success']) {
           notifyListeners();
-          commonToast(msg: result['message'], color: Colors.green);
+          commonToast(msg: result['message'], color: Colors.blue);
         } else {
           commonToast(msg: result['message'], color: Colors.red);
         }

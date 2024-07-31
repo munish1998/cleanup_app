@@ -1,18 +1,104 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:io';
-import 'package:cleanup_mobile/Models/detailtaskModel.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/Constant.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Replace with your actual API base URL
+class User {
+  final int id;
+  final String username;
+  final String name;
+  final String email;
+  final String mobile;
+  final String location;
+  final int terms;
+  final int isAdmin;
+  final int isActive;
+
+  User({
+    required this.id,
+    required this.username,
+    required this.name,
+    required this.email,
+    required this.mobile,
+    required this.location,
+    required this.terms,
+    required this.isAdmin,
+    required this.isActive,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      username: json['username'],
+      name: json['name'],
+      email: json['email'],
+      mobile: json['mobile'],
+      location: json['location'],
+      terms: json['terms'],
+      isAdmin: json['is_admin'],
+      isActive: json['is_active'],
+    );
+  }
+}
+
+class Taskk {
+  final int id;
+  final int userId;
+  final String location;
+  final String title;
+  final String description;
+  final String beforeImageUrl;
+  final String afterImageUrl;
+  final String baseUrl;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+  final User user;
+
+  Taskk({
+    required this.id,
+    required this.userId,
+    required this.location,
+    required this.title,
+    required this.description,
+    required this.beforeImageUrl,
+    required this.afterImageUrl,
+    required this.baseUrl,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.user,
+  });
+
+  factory Taskk.fromJson(Map<String, dynamic> json) {
+    return Taskk(
+      id: json['id'],
+      userId: json['user_id'],
+      location: json['location'],
+      title: json['title'],
+      description: json['description'],
+      beforeImageUrl: '${json['base_url']}${json['before']}',
+      afterImageUrl: '${json['base_url']}${json['after']}',
+      baseUrl: json['base_url'],
+      status: json['status'],
+      createdAt: json['created_at'],
+      updatedAt: json['updated_at'],
+      user: User.fromJson(json['user']),
+    );
+  }
+}
+
 const String baseUrl = 'https://webpristine.com/cleanup/public/';
 
 class DetailTaskScreen extends StatefulWidget {
   final int taskId;
 
-  const DetailTaskScreen({super.key, required this.taskId});
+  const DetailTaskScreen({Key? key, required this.taskId}) : super(key: key);
 
   @override
   State<DetailTaskScreen> createState() => _DetailTaskScreenState();
@@ -29,49 +115,44 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   Future<void> _fetchTaskDetails() async {
-    var url = Uri.parse('${baseUrl}api/auth/task/view-task/${widget.taskId}');
+    final url = Uri.parse('${baseUrl}api/auth/task/view-task/${widget.taskId}');
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
 
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString('accessTokenKey');
+    if (accessToken == null) {
+      _showError('Access token not found. Please log in again.');
+      return;
+    }
 
-    // Log the access token
-    log('Access Token: $accessToken');
-
-    Map<String, String> headers = {
+    final headers = {
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
     };
 
     try {
       final response = await http.get(url, headers: headers);
-      log('Response body: ${response.body}');
-      log('Response status code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        var result = jsonDecode(response.body);
+        final result = jsonDecode(response.body);
         if (result['success'] == true) {
           setState(() {
             _task = Taskk.fromJson(result['task']);
             _isLoading = false;
+            _logImageUrls();
           });
         } else {
-          setState(() {
-            _isLoading = false;
-          });
           _showError(result['message'] ?? 'Failed to fetch task details');
         }
       } else {
-        setState(() {
-          _isLoading = false;
-        });
         _showError('Server error: ${response.statusCode}');
       }
     } catch (e) {
+      _showError('An error occurred');
+      log('Error: $e');
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      _showError('An error occurred');
-      log('Error: $e');
     }
   }
 
@@ -81,11 +162,19 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     );
   }
 
+  void _logImageUrls() {
+    if (_task != null) {
+      log('Before Image URL: ${_task!.beforeImageUrl}');
+      log('After Image URL: ${_task!.afterImageUrl}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Task Details'),
+        backgroundColor: AppColor.appbarColor,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -96,28 +185,127 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   Widget _buildTaskDetails() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Title: ${_task!.title}', style: TextStyle(fontSize: 18)),
-          SizedBox(height: 8),
-          Text('Location: ${_task!.location}', style: TextStyle(fontSize: 16)),
-          SizedBox(height: 8),
-          Text('Description: ${_task!.description}',
-              style: TextStyle(fontSize: 16)),
-          SizedBox(height: 8),
-          Text('Status: ${_task!.status}', style: TextStyle(fontSize: 16)),
-          SizedBox(height: 16),
-          if (_task!.beforeImageUrl.isNotEmpty)
-            Image.network(
-                '${baseUrl}assets/images/tasks/${_task!.beforeImageUrl}'),
-          SizedBox(height: 16),
-          if (_task!.afterImageUrl.isNotEmpty)
-            Image.network(
-                '${baseUrl}assets/images/tasks/${_task!.afterImageUrl}'),
-        ],
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailCard(
+              title: 'Task Title',
+              content: _task!.title,
+            ),
+            SizedBox(height: 16),
+            _buildDetailCard(
+              title: 'Location',
+              content: _task!.location,
+            ),
+            SizedBox(height: 16),
+            _buildDetailCard(
+              title: 'Description',
+              content: _task!.description,
+            ),
+            SizedBox(height: 16),
+            _buildDetailCard(
+              title: 'Status',
+              content: _task!.status,
+            ),
+            SizedBox(height: 16),
+            _buildImageCard(
+              label: 'Before Image',
+              imageUrl: _task!.beforeImageUrl,
+            ),
+            SizedBox(height: 16),
+            _buildImageCard(
+              label: 'After Image',
+              imageUrl: _task!.afterImageUrl,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailCard({required String title, required String content}) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey[800],
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              content,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageCard({required String label, required String imageUrl}) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey[800],
+              ),
+            ),
+            SizedBox(height: 8),
+            imageUrl.isNotEmpty
+                ? Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(child: Text('Failed to load image'));
+                      },
+                    ),
+                  )
+                : Center(child: Text('No image available')),
+          ],
+        ),
       ),
     );
   }

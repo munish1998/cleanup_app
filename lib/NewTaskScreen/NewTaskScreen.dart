@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:developer';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/block/taskblock.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:cleanup_mobile/ProfileScreen/ProfileScreen.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateTask extends StatefulWidget {
   const CreateTask({super.key});
@@ -24,6 +26,7 @@ class _CreateTaskState extends State<CreateTask> {
 
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _tasktitleController = TextEditingController();
   File? _beforeImage;
   File? _afterImage;
   File? _selectedImage;
@@ -32,7 +35,7 @@ class _CreateTaskState extends State<CreateTask> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromARGB(255, 248, 253, 255),
       appBar: AppBar(
         backgroundColor: const Color.fromARGB(255, 248, 253, 255),
@@ -66,210 +69,244 @@ class _CreateTaskState extends State<CreateTask> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 15, left: 15, right: 15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Task Title',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Card(
-              elevation: 0.2,
-              child: Container(
-                height: 90,
-                width: 390,
-                decoration: BoxDecoration(
-                  color: AppColor.backgroundcontainerColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 15, top: 15, right: 15),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            color: AppColor.rank1Color,
-                          ),
-                          const Text(
-                            'Location',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      TextField(
-                        controller: _locationController,
-                        decoration: const InputDecoration(
-                          hintText: 'Add location',
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 15, left: 15, right: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                elevation: 0.2,
+                child: Container(
+                  height: 90,
+                  width: 390,
+                  decoration: BoxDecoration(
+                    color: AppColor.backgroundcontainerColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Card(
-              elevation: 0.2,
-              child: Container(
-                height: 90,
-                width: 390,
-                decoration: BoxDecoration(
-                  color: AppColor.backgroundcontainerColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 15, top: 15, right: 15),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.description,
-                            color: AppColor.rank1Color,
-                          ),
-                          const Text(
-                            'Add Description',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      TextField(
-                        controller: _descriptionController,
-                        decoration: const InputDecoration(
-                          hintText: 'Add description',
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              children: [
-                Expanded(
-                  child: Card(
-                    elevation: 0.3,
-                    child: GestureDetector(
-                      onTap: () {
-                        _showBottomSheet(context, true);
-                      },
-                      child: Container(
-                        height: 153,
-                        decoration: BoxDecoration(
-                          color: AppColor.backgroundcontainerColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(left: 15, top: 15, right: 15),
+                    child: Column(
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              'Before',
-                              style: TextStyle(fontSize: 15),
+                            const Text(
+                              'Task title',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            SizedBox(height: 12),
-                            _beforeImage != null
-                                ? Image.file(
-                                    _beforeImage!,
-                                    width: double.infinity,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                  )
-                                : const Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: Colors.grey,
-                                  ),
                           ],
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-                Card(
-                  elevation: 0.3,
-                  child: Container(
-                    height: 153,
-                    width: 185,
-                    decoration: BoxDecoration(
-                      color: AppColor.backgroundcontainerColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'After',
-                          style: TextStyle(fontSize: 15),
+                        TextField(
+                          controller: _tasktitleController,
+                          decoration: const InputDecoration(
+                            hintText: 'Task title',
+                            border: InputBorder.none,
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        _afterImage != null
-                            ? Image.file(
-                                _afterImage!,
-                                width: double.infinity,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              )
-                            : GestureDetector(
-                                onTap: () {
-                                  _showBottomSheet(context, false);
-                                },
-                                child: const Icon(
-                                  Icons.camera_alt_outlined,
-                                  color: Colors.grey,
-                                ),
-                              ),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  _saveTask(context);
-                },
+              ),
+              const SizedBox(height: 15),
+              Card(
+                elevation: 0.2,
                 child: Container(
-                  height: 54,
+                  height: 90,
                   width: 390,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: AppColor.rank1Color,
+                    color: AppColor.backgroundcontainerColor,
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'Save',
-                      style: TextStyle(
-                        fontSize: 20,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(left: 15, top: 15, right: 15),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              color: AppColor.rank1Color,
+                            ),
+                            const Text(
+                              'Location',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextField(
+                          controller: _locationController,
+                          decoration: const InputDecoration(
+                            hintText: 'Add location',
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Card(
+                elevation: 0.2,
+                child: Container(
+                  height: 90,
+                  width: 390,
+                  decoration: BoxDecoration(
+                    color: AppColor.backgroundcontainerColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(left: 15, top: 15, right: 15),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.description,
+                              color: AppColor.rank1Color,
+                            ),
+                            const Text(
+                              'Add Description',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        TextField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            hintText: 'Add description',
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  Expanded(
+                    child: Card(
+                      elevation: 0.3,
+                      child: GestureDetector(
+                        onTap: () {
+                          _showBottomSheet(context, true);
+                        },
+                        child: Container(
+                          height: 153,
+                          decoration: BoxDecoration(
+                            color: AppColor.backgroundcontainerColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Before',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              SizedBox(height: 12),
+                              _beforeImage != null
+                                  ? Image.file(
+                                      _beforeImage!,
+                                      width: double.infinity,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : const Icon(
+                                      Icons.camera_alt_outlined,
+                                      color: Colors.grey,
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Card(
+                    elevation: 0.3,
+                    child: Container(
+                      height: 153,
+                      width: 185,
+                      decoration: BoxDecoration(
                         color: AppColor.backgroundcontainerColor,
-                        fontWeight: FontWeight.bold,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'After',
+                            style: TextStyle(fontSize: 15),
+                          ),
+                          const SizedBox(height: 12),
+                          _afterImage != null
+                              ? Image.file(
+                                  _afterImage!,
+                                  width: double.infinity,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                )
+                              : GestureDetector(
+                                  onTap: () {
+                                    _showBottomSheet(context, false);
+                                  },
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    _saveTask(context);
+                  },
+                  child: Container(
+                    height: 54,
+                    width: 390,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      color: AppColor.rank1Color,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: AppColor.backgroundcontainerColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
@@ -302,19 +339,67 @@ class _CreateTaskState extends State<CreateTask> {
     );
   }
 
-  void _saveTask(BuildContext context) {
-    final title = 'my task'; // Get this from your input field
-    final location = _locationController.text;
-    final description = _descriptionController.text;
+  void _saveTask(BuildContext context) async {
+    final title = _tasktitleController.text.trim();
+    final location = _locationController.text.trim();
+    final description = _descriptionController.text.trim();
 
+    // Check if the task title is empty
+    if (title.isEmpty) {
+      _showErrorSnackbar(context, 'Please fill in the task title.');
+      return;
+    }
+
+    // Check if the location is empty
+    if (location.isEmpty) {
+      _showErrorSnackbar(context, 'Please fill in the location.');
+      return;
+    }
+
+    // Check if the description is empty
+    if (description.isEmpty) {
+      _showErrorSnackbar(context, 'Please add a description.');
+      return;
+    }
+
+    // Check if the before image is null
+    if (_beforeImage == null) {
+      _showErrorSnackbar(context, 'Please upload the before image.');
+      return;
+    }
+
+    // Check if the after image is null
+    if (_afterImage == null) {
+      _showErrorSnackbar(context, 'Please upload the after image.');
+      return;
+    }
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? userid = pref.getString(userIdKey);
+
+    if (userid == null) {
+      _showErrorSnackbar(context, 'User ID not found.');
+      return;
+    }
+
+    // Proceed with task creation if all validations pass
     Provider.of<TaskProviders>(context, listen: false).createTask(
       context: context,
       title: title,
-      userid: '11',
+      userid: userid,
       location: location,
       description: description,
       beforeImage: _beforeImage,
       afterImage: _afterImage,
+    );
+  }
+
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColor.appbarColor,
+      ),
     );
   }
 

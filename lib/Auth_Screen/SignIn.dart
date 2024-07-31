@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'dart:async';
 import 'package:cleanup_mobile/Auth_Screen/Register.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
@@ -20,12 +20,18 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool isPass = false;
+  bool isPass = true;
   bool isCPass = false;
   bool _isChecked1 = false;
   List<TextEditingController> _otpControllers =
       List.generate(4, (index) => TextEditingController());
   List<FocusNode> _focusNodes = List.generate(4, (index) => FocusNode());
+  @override
+  void initState() {
+    super.initState();
+    _focusNodes = List.generate(4, (index) => FocusNode());
+    _otpControllers = List.generate(4, (index) => TextEditingController());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +91,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: authProvider.passController,
                       hint: 'Password',
                       icon: Icons.lock,
-                      ispas: true,
+                      showSuffixIcon: true,
+                      onSuffixIconPressed: () {
+                        setState(() {
+                          isPass = !isPass;
+                        });
+                      },
+                      ispas: isPass,
                       index: 0,
                       hintTextColor: AppColor.leaderboardtextColor),
                   const SizedBox(
@@ -153,32 +165,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                                         .emailController,
                                                     maxLines: 1,
                                                     decoration: InputDecoration(
-                                                        labelText: 'Email',
-                                                        labelStyle:
-                                                            const TextStyle(
-                                                                color: Colors
-                                                                    .grey),
-                                                        contentPadding:
-                                                            const EdgeInsets
-                                                                .only(left: 10),
-                                                        border:
-                                                            InputBorder.none,
-                                                        suffixIcon: const Icon(
-                                                          Icons.email,
-                                                          color: AppColor
-                                                              .rank1Color,
-                                                        ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                                borderSide:
-                                                                    const BorderSide(
-                                                                  color: AppColor
-                                                                      .rank1Color,
-                                                                ),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            17))),
+                                                      labelText: 'Email',
+                                                      labelStyle:
+                                                          const TextStyle(
+                                                              color:
+                                                                  Colors.grey),
+                                                      contentPadding:
+                                                          const EdgeInsets.only(
+                                                              left: 10),
+                                                      border: InputBorder.none,
+                                                      suffixIcon: const Icon(
+                                                        Icons.email,
+                                                        color:
+                                                            AppColor.rank1Color,
+                                                      ),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
@@ -289,14 +290,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget textfields(
-      {required BuildContext context,
-      required TextEditingController controller,
-      required String hint,
-      required IconData icon,
-      required bool ispas,
-      required int index,
-      required Color hintTextColor}) {
+  Widget textfields({
+    required BuildContext context,
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required bool ispas,
+    required int index,
+    required Color hintTextColor,
+    bool showSuffixIcon = false,
+    VoidCallback? onSuffixIconPressed, // Add a callback for suffix icon press
+  }) {
     return Container(
       height: 60,
       width: MediaQuery.of(context).size.width - 50,
@@ -308,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
             color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: TextFormField(
@@ -319,6 +323,15 @@ class _LoginScreenState extends State<LoginScreen> {
           hintStyle: TextStyle(color: hintTextColor),
           border: InputBorder.none,
           prefixIcon: Icon(icon),
+          suffixIcon: showSuffixIcon
+              ? IconButton(
+                  icon: Icon(
+                    ispas ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: onSuffixIconPressed, // Use the callback here
+                )
+              : null,
         ),
       ),
     );
@@ -344,12 +357,14 @@ class _LoginScreenState extends State<LoginScreen> {
             counterText: '',
           ),
           onChanged: (value) {
-            if (value.isNotEmpty) {
-              if (index + 1 < _otpControllers.length) {
-                FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
-              } else {
-                FocusScope.of(context).unfocus();
-              }
+            if (value.length == 1) {
+              Timer(Duration(milliseconds: 100), () {
+                if (index + 1 < _otpControllers.length) {
+                  FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+                } else {
+                  FocusScope.of(context).unfocus();
+                }
+              });
             }
           },
         ),
@@ -486,19 +501,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           const Text(
                             'Change Password',
                             style: TextStyle(
-                              color: AppColor.backgroundcontainerColor,
+                              color: Colors.black,
                               fontSize: 20,
                             ),
                           ),
-                          const SizedBox(height: 30),
+                          //const SizedBox(height: 30),
                           const SizedBox(height: 30),
                           textfields(
                             context: context,
                             controller: authProvider.passController,
                             hint: 'Password',
-                            icon: isPass
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            icon: Icons.lock,
+                            showSuffixIcon: true,
+                            onSuffixIconPressed: () {
+                              setState(() {
+                                isPass = !isPass;
+                              });
+                            },
                             ispas: isPass,
                             hintTextColor: Colors.grey,
                             index: 5,
@@ -508,9 +527,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             context: context,
                             controller: authProvider.cPassController,
                             hint: 'Confirm password',
-                            icon: isCPass
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            icon: Icons.lock,
+                            showSuffixIcon: true,
+                            onSuffixIconPressed: () {
+                              setState(() {
+                                isCPass = !isCPass;
+                              });
+                            },
                             ispas: isCPass,
                             hintTextColor: Colors.grey,
                             index: 6,
@@ -562,6 +585,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> onLogin() async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
     var data = {};
+
     if (pro.emailController.text.isEmpty) {
       customToast(context: context, msg: 'Email ID required', type: 0);
     } else if (!emailExpression.hasMatch(pro.emailController.text)) {
@@ -572,17 +596,21 @@ class _LoginScreenState extends State<LoginScreen> {
       customToast(
           context: context, msg: 'Please enter 8 digit password', type: 0);
     } else {
-      data = {
+      var data = {
         'email': pro.emailController.text,
         'password': pro.passController.text,
       };
 
-      pro.login(context: context, data: data).then((value) {
-        log('Login Here-------------------- $data');
+      bool loginSuccessful = await pro.login(context: context, data: data);
+      log('Login Here-------------------- $data');
+
+      if (loginSuccessful) {
+        customToast(context: context, msg: 'Login successful', type: 0);
         navPush(context: context, action: HomeScreen());
-      });
+      } else {
+        customToast(context: context, msg: 'Incorrect login details', type: 0);
+      }
     }
-    // log('Login Here-------------------- $data');
   }
 
   void onForgetpassword() async {

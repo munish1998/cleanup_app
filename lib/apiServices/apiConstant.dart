@@ -14,6 +14,7 @@ class ApiServices {
   static const String sendOtp = '${baseUrl}/api/auth/send-otp';
   static const String verifyOtp = '${baseUrl}/api/auth/verify-otp';
   static const String forgotPass = '${baseUrl}/api/auth/reset-password';
+  static const String logOut = '${baseUrl}/api/auth/logout';
   static const String createTask = '${baseUrl}/api/auth/task/create-task';
   static const String getmytaskList = '${baseUrl}/api/auth/task/my-task';
   static const String getProfile = '${baseUrl}user/my_profile';

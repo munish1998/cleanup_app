@@ -67,7 +67,7 @@ class _MyTaskListState extends State<MyTaskList> {
       body: Consumer<TaskProviders>(
         builder: (context, taskProvider, child) {
           if (taskProvider.mytasklist.isEmpty) {
-            return Center(child: Text('No tasks found.'));
+            return Center(child: CircularProgressIndicator());
           }
 
           return Padding(

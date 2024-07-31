@@ -108,7 +108,7 @@ class AuthProvider with ChangeNotifier {
     pref.clear();
   }
 
-  Future<void> logout(BuildContext context) async {
+  Future<void> logoutt(BuildContext context) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.clear();
     // navPushRemove(context: context, action: FirstOnboard());
@@ -222,7 +222,9 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> login({required BuildContext context, required Map data}) async {
+  Future<bool> login(
+      {required BuildContext context,
+      required Map<String, String> data}) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var url = Uri.parse(ApiServices.login);
     _isLogin = false;
@@ -248,33 +250,47 @@ class AuthProvider with ChangeNotifier {
           // Save values in SharedPreferences
           pref.setBool(isUserLoginKey, true);
           pref.setString(accessTokenKey, result['access_token']);
-          // Assume user_id needs to be fetched from somewhere or added in future responses
-          pref.setString(userIdKey,
-              result['id']); // Uncomment if you have user_id in response
+          pref.setString(
+              userIdKey,
+              result['user']['id']
+                  .toString()); // Ensure user ID is stored as a string
 
           // Log stored values
           log('Stored access token: ${pref.getString(accessTokenKey)}');
-          log('user_id===>>>> ${pref.getString(userIdKey)}');
-          // log('Stored user id: ${pref.getString(userIdKey)}'); // Uncomment if user_id is stored
+          log('Stored user ID: ${pref.getString(userIdKey)}');
 
           _isLogin = true;
           notifyListeners();
+          return true; // Login successful
         } else {
-          customToast(context: context, msg: result['message'], type: 0);
+          // Handle missing access token
+          customToast(
+              context: context,
+              msg: result['message'] ?? 'Login failed',
+              type: 0);
           _isLogin = false;
           notifyListeners();
+          return false; // Login failed
         }
       } catch (e) {
         log('Error parsing response: $e');
-        // customToast(context: context, msg: 'An error occurred', type: 0);
+        customToast(
+            context: context,
+            msg: 'An error occurred while processing the response',
+            type: 0);
         _isLogin = false;
         notifyListeners();
+        return false; // Login failed
       }
     } else {
       log('Error response status code: ${response.statusCode}');
-      customToast(context: context, msg: 'An error occurred', type: 0);
+      customToast(
+          context: context,
+          msg: 'Server error: ${response.statusCode}',
+          type: 0);
       _isLogin = false;
       notifyListeners();
+      return false; // Login failed
     }
   }
 
@@ -317,7 +333,7 @@ class AuthProvider with ChangeNotifier {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var url = Uri.parse(ApiServices.sendOtp);
 
-    showLoaderDialog(context, '');
+    showLoaderDialog(context, 'Please wait..');
     final response =
         await ApiClient().postData(context: context, url: url, body: data);
     var result = jsonDecode(response.body);
@@ -345,7 +361,7 @@ class AuthProvider with ChangeNotifier {
     SharedPreferences pref = await SharedPreferences.getInstance();
     _isVerify = false;
     var url = Uri.parse(ApiServices.verifyOtp);
-    showLoaderDialog(context, 'P..');
+    showLoaderDialog(context, 'Please wait..');
     final response =
         await ApiClient().postData(context: context, url: url, body: data);
     var result = jsonDecode(response.body);
@@ -418,7 +434,7 @@ class AuthProvider with ChangeNotifier {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var url = Uri.parse(ApiServices.forgotPass);
 
-    showLoaderDialog(context, '');
+    showLoaderDialog(context, 'Please wait..');
     final response =
         await ApiClient().postData(context: context, url: url, body: data);
     var result = jsonDecode(response.body);
@@ -437,6 +453,54 @@ class AuthProvider with ChangeNotifier {
       customToast(context: context, msg: result['message'], type: 0);
       _isForgot = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> logout(BuildContext context) async {
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? token = pref.getString(accessTokenKey); // Retrieve token
+
+    if (token == null) {
+      customToast(context: context, msg: 'No access token found', type: 0);
+      return;
+    }
+
+    final url = Uri.parse(ApiServices.logOut); // Logout URL
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      log('Logout response status code: ${response.statusCode}');
+      log('Logout response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        // Clear user data from SharedPreferences
+        await pref.remove(accessTokenKey);
+        await pref.remove(userIdKey);
+        await pref.setBool(isUserLoginKey, false);
+
+        // Notify listeners and handle any UI updates
+        notifyListeners();
+        customToast(context: context, msg: 'Logout successful', type: 1);
+
+        // Optionally, navigate to login or home screen
+        // navPushRemove(context: context, action: FirstOnboard());
+      } else {
+        customToast(
+            context: context,
+            msg: 'Logout failed: ${response.statusCode}',
+            type: 0);
+      }
+    } catch (e) {
+      log('Logout error: $e');
+      customToast(
+          context: context, msg: 'An error occurred during logout', type: 0);
     }
   }
 }

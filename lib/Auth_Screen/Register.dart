@@ -376,7 +376,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'is_admin': "0",
       };
       pro.signUp(context: context, data: data).then((value) {
-        navPush(context: context, action: HomeScreen());
+        navPush(context: context, action: LoginScreen());
       }).catchError((error) {
         log('SignUp Error: $error');
         commonToast(msg: 'SignUp Error: $error', color: Colors.red);

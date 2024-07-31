@@ -23,8 +23,8 @@ class TutorialPage extends StatelessWidget {
             right: 20,
             child: InkWell(
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => MyWidget()));
+                  // Navigator.push(context,
+                  //     MaterialPageRoute(builder: (context) => MyWidget()));
                 },
                 child: Container(
                   height: 35,
