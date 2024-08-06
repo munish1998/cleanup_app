@@ -68,6 +68,25 @@ class AuthProvider with ChangeNotifier {
   TextEditingController nCPassController = TextEditingController();
   File? image;
   final picker = ImagePicker();
+  @override
+  void dispose() {
+    usernameController.dispose();
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    countryController.dispose();
+    locationController.dispose();
+    areaController.dispose();
+    passController.dispose();
+    cPassController.dispose();
+    otpController.dispose();
+    fEmailController.dispose();
+    lEmailController.dispose();
+    lPassController.dispose();
+    nPassController.dispose();
+    nCPassController.dispose();
+    super.dispose();
+  }
 
   Future<void> pickedImage() async {
     final imaged = await picker.pickImage(source: ImageSource.gallery);
@@ -258,6 +277,7 @@ class AuthProvider with ChangeNotifier {
           // Log stored values
           log('Stored access token: ${pref.getString(accessTokenKey)}');
           log('Stored user ID: ${pref.getString(userIdKey)}');
+          log('check logged===>>>>${pref.setBool(isUserLoginKey, true)}');
 
           _isLogin = true;
           notifyListeners();

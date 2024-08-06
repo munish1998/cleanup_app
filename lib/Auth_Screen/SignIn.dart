@@ -110,109 +110,127 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () {
                           // Show bottom sheet when "Forgot Password?" is tapped
                           showModalBottomSheet(
+                            isScrollControlled: true,
                             context: context,
                             builder: (BuildContext context) {
+                              final mediaQuery = MediaQuery.of(context);
                               return Consumer<AuthProvider>(
                                 builder: (context, authProvider, child) {
-                                  return Container(
-                                    height: 400,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(top: 20),
-                                      child: Center(
-                                        child: Column(
-                                          children: [
-                                            const Text(
-                                              'FORGET PASSWORD?',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              height: 12,
-                                            ),
-                                            const Text(
-                                              'Enter your email or phone number',
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            const Text(
-                                              'We will send you confirm code',
-                                              style: TextStyle(
-                                                fontSize: 15,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                            const SizedBox(
-                                              height: 15,
-                                            ),
-                                            SizedBox(
-                                              child: Card(
-                                                elevation: 3,
-                                                child: Container(
-                                                  height: 54,
-                                                  width: 370,
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              17)),
-                                                  child: TextFormField(
-                                                    controller: authProvider
-                                                        .emailController,
-                                                    maxLines: 1,
-                                                    decoration: InputDecoration(
-                                                      labelText: 'Email',
-                                                      labelStyle:
-                                                          const TextStyle(
-                                                              color:
-                                                                  Colors.grey),
-                                                      contentPadding:
-                                                          const EdgeInsets.only(
-                                                              left: 10),
-                                                      border: InputBorder.none,
-                                                      suffixIcon: const Icon(
-                                                        Icons.email,
-                                                        color:
-                                                            AppColor.rank1Color,
+                                  return SingleChildScrollView(
+                                    child: Container(
+                                      color: Colors.white,
+                                      padding: EdgeInsets.only(
+                                          bottom: mediaQuery.viewInsets
+                                              .bottom), // Adjust for keyboard
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 20),
+                                            child: Center(
+                                              child: Column(
+                                                children: [
+                                                  const Text(
+                                                    'FORGET PASSWORD?',
+                                                    style: TextStyle(
+                                                      fontSize: 20,
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  const Text(
+                                                    'Enter your email or phone number',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                  const Text(
+                                                    'We will send you a confirmation code',
+                                                    style: TextStyle(
+                                                      fontSize: 15,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 15),
+                                                  SizedBox(
+                                                    child: Card(
+                                                      elevation: 3,
+                                                      child: Container(
+                                                        height: 54,
+                                                        width: 370,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(17),
+                                                        ),
+                                                        child: TextFormField(
+                                                          controller: authProvider
+                                                              .fEmailController,
+                                                          maxLines: 1,
+                                                          decoration:
+                                                              InputDecoration(
+                                                            labelText: 'Email',
+                                                            labelStyle:
+                                                                const TextStyle(
+                                                                    color: Colors
+                                                                        .grey),
+                                                            contentPadding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    left: 10),
+                                                            border: InputBorder
+                                                                .none,
+                                                            suffixIcon:
+                                                                const Icon(
+                                                              Icons.email,
+                                                              color: AppColor
+                                                                  .rank1Color,
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
+                                                  const SizedBox(height: 20),
+                                                  GestureDetector(
+                                                    onTap: () async {
+                                                      await onSendOtp(context);
+                                                    },
+                                                    child: Container(
+                                                      height: 54,
+                                                      width: 370,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(30),
+                                                        color:
+                                                            AppColor.rank1Color,
+                                                      ),
+                                                      child: const Center(
+                                                        child: Text(
+                                                          'Send OTP',
+                                                          style: TextStyle(
+                                                            fontSize: 20,
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(
-                                              height: 20,
-                                            ),
-                                            GestureDetector(
-                                              onTap: () async {
-                                                // Call onSendOtp function
-                                                await onSendOtp(context);
-                                              },
-                                              child: Container(
-                                                height: 54,
-                                                width: 370,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                  color: AppColor.rank1Color,
-                                                ),
-                                                child: const Center(
-                                                    child: Text(
-                                                  'Send Otp',
-                                                  style: TextStyle(
-                                                      fontSize: 20,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   );
@@ -376,13 +394,13 @@ class _LoginScreenState extends State<LoginScreen> {
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
     var data = {};
 
-    if (authProvider.emailController.text.isEmpty) {
+    if (authProvider.fEmailController.text.isEmpty) {
       customToast(context: context, msg: 'Email ID required', type: 0);
-    } else if (!emailExpression.hasMatch(authProvider.emailController.text)) {
+    } else if (!emailExpression.hasMatch(authProvider.fEmailController.text)) {
       customToast(context: context, msg: 'Enter valid Email ID', type: 0);
     } else {
       data = {
-        'email': authProvider.emailController.text,
+        'email': authProvider.fEmailController.text,
       };
 
       try {
@@ -390,15 +408,21 @@ class _LoginScreenState extends State<LoginScreen> {
         // Show the verification code bottom sheet after OTP is sent
         showModalBottomSheet(
           context: context,
+          isScrollControlled: true, // Allow the bottom sheet to resize
           builder: (BuildContext context) {
-            return Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                return Container(
-                  height: 400,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 25),
+            final mediaQuery = MediaQuery.of(context);
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: mediaQuery.viewInsets.bottom,
+              ),
+              child: Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return SingleChildScrollView(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
                       child: Column(
+                        mainAxisSize: MainAxisSize
+                            .min, // Allow the bottom sheet to be as small as needed
                         children: [
                           const Text(
                             'VERIFICATION CODE',
@@ -415,22 +439,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(
-                            height: 12,
-                          ),
+                          const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: _buildOtpFields(),
                           ),
-                          const SizedBox(
-                            height: 25,
-                          ),
+                          const SizedBox(height: 25),
                           GestureDetector(
                             onTap: () => onVerify(
-                                context, authProvider.emailController.text),
+                                context, authProvider.fEmailController.text),
                             child: Container(
                               height: 54,
-                              width: 370,
+                              width: double.infinity,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(17),
                                 color: Colors.lightBlue.shade300,
@@ -450,9 +470,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           },
         );
@@ -463,6 +483,128 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // void onVerify(BuildContext context, String email) async {
+  //   var authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+  //   // Collect OTP by combining the text from all controllers
+  //   String otp = _otpControllers.map((controller) => controller.text).join();
+
+  //   if (otp.length != 4) {
+  //     customToast(context: context, msg: 'Please enter all 4 digits', type: 0);
+  //     return;
+  //   }
+
+  //   var data = {
+  //     'email': email,
+  //     'otp': otp,
+  //   };
+
+  //   try {
+  //     // Call the verifyOTP function and get the reset token
+  //     String? resetToken =
+  //         await authProvider.verifyOTP(context: context, data: data);
+  //     log('Reset token received: $resetToken');
+
+  //     if (resetToken != null) {
+  //       // Proceed with UI update
+  //       showModalBottomSheet(
+  //         context: context,
+  //         isScrollControlled: true, // Allow the bottom sheet to resize
+  //         builder: (BuildContext context) {
+  //           final mediaQuery = MediaQuery.of(context);
+  //           return Consumer<AuthProvider>(
+  //             builder: (context, authProvider, child) {
+  //               return SingleChildScrollView(
+  //                 child: Container(
+  //                   color: Colors.white,
+  //                   padding: EdgeInsets.only(
+  //                       bottom:
+  //                           mediaQuery.viewInsets.bottom, // Adjust for keyboard
+  //                       left: 20,
+  //                       right: 20,
+  //                       top: 20),
+  //                   child: Column(
+  //                     mainAxisSize: MainAxisSize
+  //                         .min, // Allow the bottom sheet to be as small as needed
+  //                     children: [
+  //                       const Text(
+  //                         'Change Password',
+  //                         style: TextStyle(
+  //                           color: Colors.black,
+  //                           fontSize: 20,
+  //                         ),
+  //                       ),
+  //                       const SizedBox(height: 30),
+  //                       textfields(
+  //                         context: context,
+  //                         controller: authProvider.passController,
+  //                         hint: 'Password',
+  //                         icon: Icons.lock,
+  //                         showSuffixIcon: true,
+  //                         onSuffixIconPressed: () {
+  //                           setState(() {
+  //                             isPass = !isPass;
+  //                           });
+  //                         },
+  //                         ispas: isPass,
+  //                         hintTextColor: Colors.grey,
+  //                         index: 5,
+  //                       ),
+  //                       const SizedBox(height: 10),
+  //                       textfields(
+  //                         context: context,
+  //                         controller: authProvider.cPassController,
+  //                         hint: 'Confirm password',
+  //                         icon: Icons.lock,
+  //                         showSuffixIcon: true,
+  //                         onSuffixIconPressed: () {
+  //                           setState(() {
+  //                             isCPass = !isCPass;
+  //                           });
+  //                         },
+  //                         ispas: isCPass,
+  //                         hintTextColor: Colors.grey,
+  //                         index: 6,
+  //                       ),
+  //                       const SizedBox(height: 10),
+  //                       InkWell(
+  //                         onTap: () =>
+  //                             onForgetpassword(), // Pass the reset token here
+  //                         child: Container(
+  //                           color: Colors.white,
+  //                           height: 54,
+  //                           width: double.infinity,
+  //                           decoration: BoxDecoration(
+  //                             borderRadius: BorderRadius.circular(20),
+  //                             color: AppColor.rank1Color,
+  //                           ),
+  //                           child: const Center(
+  //                             child: Text(
+  //                               'Reset Password',
+  //                               style: TextStyle(
+  //                                 fontSize: 20,
+  //                                 color: AppColor.backgroundcontainerColor,
+  //                                 fontWeight: FontWeight.bold,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                       const SizedBox(height: 10),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               );
+  //             },
+  //           );
+  //         },
+  //       );
+  //     }
+  //   } catch (e) {
+  //     customToast(context: context, msg: 'Error verifying OTP.', type: 0);
+  //     debugPrint('Error: $e');
+  //   }
+  // }
   void onVerify(BuildContext context, String email) async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
 
@@ -606,7 +748,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (loginSuccessful) {
         customToast(context: context, msg: 'Login successful', type: 0);
-        navPush(context: context, action: HomeScreen());
+        navPushRemove(context: context, action: HomeScreen());
       } else {
         customToast(context: context, msg: 'Incorrect login details', type: 0);
       }

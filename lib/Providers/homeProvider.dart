@@ -3,7 +3,10 @@ import 'dart:developer';
 import 'dart:io';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/Models/detailtaskModel.dart';
+import 'package:cleanup_mobile/Models/myfriendsModel.dart';
 import 'package:cleanup_mobile/Models/mytaskModel.dart';
+import 'package:cleanup_mobile/Models/pendingRequest.dart';
+import 'package:cleanup_mobile/Models/userModel.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
@@ -19,9 +22,13 @@ class TaskProviders with ChangeNotifier {
   List<Task> _mytasklist = [];
   List<Task> get mytasklist => _mytasklist;
   List<Taskk> _tasks = [];
-
+  List<PendingRequestModel> _pending = [];
+  List<PendingRequestModel> get pending => _pending;
   List<Taskk> get tasks => _tasks;
-
+  List<AllUserModel> _allUser = [];
+  List<AllUserModel> get allUser => _allUser;
+  List<MyFriendsModel> _myfreinds = [];
+  List<MyFriendsModel> get myfriends => _myfreinds;
   TextEditingController _nameController = TextEditingController();
   TextEditingController _locationController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
@@ -89,55 +96,46 @@ class TaskProviders with ChangeNotifier {
     }
   }
 
-  Future<void> getMyTaskListt({
+  Future<void> getallUsers({
     required BuildContext context,
-    required Map<String, String> data,
   }) async {
-    var url = Uri.parse(ApiServices.getmytaskList);
+    var url = Uri.parse(ApiServices.getallUser);
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? accessToken = prefs.getString(accessTokenKey);
+      // Make the GET request with headers
+      final response = await http.get(url, headers: headers);
 
-      var headers = {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      };
-
-      final response = await http.get(url,
-          headers: headers); // Use GET if the endpoint expects it
-
+      log('Response status: ${response.statusCode}');
       log('Response body: ${response.body}');
-      log('Response status code: ${response.statusCode}');
-      log('Response content-type: ${response.headers['content-type']}');
+      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of user objects
+        List<dynamic> userList = jsonDecode(response.body);
 
-      if (response.headers['content-type']?.contains('application/json') ==
-          true) {
-        var result = jsonDecode(response.body);
-
-        if (response.statusCode == 200) {
-          if (result['code'] == 200) {
-            log('MyTaskList response: $result');
-            var list = result['tasks'] as List;
-            _mytasklist = list.map((e) => Task.fromJson(e)).toList();
-            notifyListeners();
-          } else if (result['code'] == 401) {
-            Provider.of<AuthProvider>(context, listen: false).logout(context);
-          } else {
-            log('Error code from server: ${result['code']}');
-            notifyListeners();
-          }
-        } else {
-          log('Error: Status code ${response.statusCode}');
-          notifyListeners();
-        }
+        _allUser = userList
+            .map((userData) => AllUserModel.fromJson(userData))
+            .toList();
+        log('userlist response ====>>>>$_allUser');
+        notifyListeners(); // Notify listeners if using Provider
       } else {
-        log('Unexpected content-type: ${response.headers['content-type']}');
-        notifyListeners();
+        // Handle server error
+        _allUser = [];
+        customToast(context: context, msg: 'Server error', type: 0);
       }
     } catch (e) {
-      log('Exception occurred: $e');
-      notifyListeners();
+      log('Error: $e');
+      _allUser = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
     }
   }
 
@@ -211,10 +209,77 @@ class TaskProviders with ChangeNotifier {
     }
   }
 
-  Future<void> getMyTaskListtt({
+  Future<void> sendFriendRequest({
+    required BuildContext context,
+    required int receiverId,
+  }) async {
+    var url = Uri.parse(
+        'https://webpristine.com/cleanup/public/api/auth/friend-request');
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken =
+        pref.getString(accessTokenKey); // Ensure the key matches
+
+    // Log the access token and receiverId
+    log('Access Token: $accessToken');
+    log('Receiver ID: $receiverId');
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    };
+
+    // Prepare the form data
+    Map<String, String> body = {
+      'receiver_id': receiverId.toString(),
+    };
+
+    try {
+      // Log the body data
+      log('Request Body: ${body.toString()}');
+
+      // Make the POST request with headers and body
+      final response = await http.post(url, headers: headers, body: body);
+
+      // Log the response status and body
+      log('Response status: ${response.statusCode}');
+      log('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        var responseBody = jsonDecode(response.body);
+        if (responseBody['success']) {
+          // Handle successful friend request
+          customToast(context: context, msg: responseBody['message'], type: 1);
+        } else {
+          // Handle failed friend request
+          customToast(
+              context: context, msg: 'Failed to send friend request', type: 0);
+        }
+      } else {
+        // Handle server error
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
+      }
+    } catch (e) {
+      // Log and show error message
+      log('Error: $e');
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
+  void customToast(
+      {required BuildContext context, required String msg, required int type}) {
+    // Your custom toast implementation
+  }
+
+  Future<void> getpendingRequest({
     required BuildContext context,
   }) async {
-    var url = Uri.parse(ApiServices.getmytaskList);
+    var url = Uri.parse(ApiServices.pendingRequest);
 
     // Retrieve the access token from SharedPreferences
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -230,31 +295,154 @@ class TaskProviders with ChangeNotifier {
       // Make the GET request with headers
       final response = await http.get(url, headers: headers);
 
-      var result = jsonDecode(response.body);
+      log('Response status: ${response.statusCode}');
+      log('Response body: ${response.body}');
+      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of user objects
+        List<dynamic> userList = jsonDecode(response.body);
+
+        _pending = userList
+            .map((userData) => PendingRequestModel.fromJson(userData))
+            .toList();
+        log('userpendinglist response ====>>>>$_allUser');
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        // Handle server error
+        _pending = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _pending = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
+  Future<void> acceptFriendRequest({
+    required BuildContext context,
+    required int requestId,
+  }) async {
+    var url = Uri.parse(
+        'https://webpristine.com/cleanup/public/api/auth/friend-request/$requestId/accept');
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.post(url, headers: headers);
+      log('Response status: ${response.statusCode}');
       log('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        if (result['success'] == true) {
-          // Map the tasks from the response to your list
-          _tasks = (result['tasks'] as List)
-              .map((taskData) => Taskk.fromJson(taskData))
-              .toList();
+        var responseBody = jsonDecode(response.body);
+        if (responseBody['success']) {
+          customToast(context: context, msg: responseBody['message'], type: 1);
+          await getpendingRequest(context: context); // Refresh pending requests
         } else {
-          // Handle error from the response
-          _tasks = [];
-          customToast(context: context, msg: result['message'], type: 0);
+          customToast(
+              context: context,
+              msg: 'Failed to accept friend request',
+              type: 0);
         }
       } else {
-        // Handle server error
-        _tasks = [];
-        customToast(context: context, msg: 'Server error', type: 0);
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
       }
-      notifyListeners();
     } catch (e) {
       log('Error: $e');
-      _tasks = [];
       customToast(context: context, msg: 'An error occurred', type: 0);
-      notifyListeners();
+    }
+  }
+
+  Future<void> declineFriendRequest({
+    required BuildContext context,
+    required int requestId,
+  }) async {
+    var url = Uri.parse(
+        'https://webpristine.com/cleanup/public/api/auth/friend-request/$requestId/decline');
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.post(url, headers: headers);
+      log('Response status: ${response.statusCode}');
+      log('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        var responseBody = jsonDecode(response.body);
+        if (responseBody['success']) {
+          customToast(context: context, msg: responseBody['message'], type: 1);
+          await getpendingRequest(context: context); // Refresh pending requests
+        } else {
+          customToast(
+              context: context,
+              msg: 'Failed to decline friend request',
+              type: 0);
+        }
+      } else {
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
+  Future<void> getmyfreindsList({
+    required BuildContext context,
+  }) async {
+    var url = Uri.parse(ApiServices.myFreinds);
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      // Make the GET request with headers
+      final response = await http.get(url, headers: headers);
+
+      log('Response status: ${response.statusCode}');
+      log('Response body: ${response.body}');
+      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of user objects
+        List<dynamic> userList = jsonDecode(response.body);
+
+        _myfreinds = userList
+            .map((userData) => MyFriendsModel.fromJson(userData))
+            .toList();
+        log('userlist response ====>>>>$_allUser');
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        // Handle server error
+        _allUser = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _allUser = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
     }
   }
 }

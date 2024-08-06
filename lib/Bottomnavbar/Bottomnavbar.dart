@@ -89,7 +89,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
             InkWell(
               onTap: () {
                 showModalBottomSheet<void>(
-                  
                   context: context,
                   builder: (BuildContext context) {
                     return Container(
@@ -171,7 +170,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           showModalBottomSheet<void>(
             context: context,
             builder: (BuildContext context) {
-              return const SizedBox(
+              return SizedBox(
                 height: 750,
                 child: FriendListScreen(),
               );

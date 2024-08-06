@@ -17,13 +17,16 @@ class ApiServices {
   static const String logOut = '${baseUrl}/api/auth/logout';
   static const String createTask = '${baseUrl}/api/auth/task/create-task';
   static const String getmytaskList = '${baseUrl}/api/auth/task/my-task';
-  static const String getProfile = '${baseUrl}user/my_profile';
-  static const String updateProfile = '${baseUrl}user/edit_profile';
+  static const String getallUser = '${baseUrl}/api/auth/non-friends';
+  static const String sendfreindRequest = '${baseUrl}/api/auth/friend-request';
+  static const String pendingRequest = '${baseUrl}/api/auth/pending-requests';
   static const String updateProfileBG =
       '${baseUrl}user/edit_profile_bg_picture';
-  static const String addContactEnquiry = '${baseUrl}user/add_contact_enquiry';
-  static const String subscriptionPlan = '${baseUrl}user/subscriptions';
-  static const String about = '${baseUrl}user/about';
+  static const String acceptRequest =
+      '${baseUrl}/api/auth/friend-request/2/accept';
+  static const String declineRequest =
+      '${baseUrl}/api/auth/friend-request/1/decline';
+  static const String myFreinds = '${baseUrl}/api/auth/friends';
   static const String termsCondition = '${baseUrl}user/terms';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String levels = '${baseUrl}user/levels';

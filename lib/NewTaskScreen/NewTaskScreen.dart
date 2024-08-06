@@ -425,7 +425,7 @@ class _CreateTaskState extends State<CreateTask> {
           showModalBottomSheet<void>(
             context: context,
             builder: (BuildContext context) {
-              return const SizedBox(
+              return SizedBox(
                 height: 750,
                 child: FriendListScreen(),
               );

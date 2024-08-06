@@ -1,45 +1,52 @@
-import 'dart:developer';
-import 'package:cleanup_mobile/Auth_Screen/Changepassword.dart';
-import 'package:cleanup_mobile/Auth_Screen/Login.dart';
-import 'package:cleanup_mobile/Auth_Screen/Register.dart';
-import 'package:cleanup_mobile/Auth_Screen/Sendotp.dart';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
-import 'package:cleanup_mobile/Auth_Screen/Verifyotp.dart';
-import 'package:cleanup_mobile/MyTaskScreen/MyTaskScreen.dart';
-import 'package:cleanup_mobile/MyTaskScreen/myTask.dart';
-import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
+
 import 'package:cleanup_mobile/Providers/allProviders.dart';
+import 'package:cleanup_mobile/SplashScreen/SplashScreen.dart';
+import 'package:cleanup_mobile/Utils/messagingService.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:provider/provider.dart';
 
-FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    description:
+        'This channel is used for important notifications.', // description
+    importance: Importance.high,
+    playSound: true);
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+//MessagingService _msgService = MessagingService();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // AndroidInitializationSettings androidInitializationSettings =
-  //     AndroidInitializationSettings("@mipnap/launcher");
-  // DarwinInitializationSettings darwinInitializationSettings =
-  //     DarwinInitializationSettings(
-  //         requestAlertPermission: true,
-  //         requestBadgePermission: true,
-  //         requestSoundPermission: true);
-  // InitializationSettings initializationSettings = InitializationSettings(
-  //     //  android: androidInitializationSettings,
-  //     iOS: darwinInitializationSettings);
-  // bool? initialized =
-  //     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  // log('intialized===$initialized');
-  // WidgetsFlutterBinding.ensureInitialized();
-//  await notificationService.initialized();
-  // AndroidInitializationSettings androidInitializationSettings =
-  //     AndroidInitializationSettings("");
-  // DarwinInitializationSettings iosSettings = DarwinInitializationSettings();
-  // InitializationSettings initializationSettings = InitializationSettings(
-  //     android: androidInitializationSettings, iOS: iosSettings);
-  // bool? isInitialized =
-  //     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  // log('isInitialized====>>>$isInitialized');
+  await Firebase.initializeApp(
+      // Replace with actual values
+      // options: FirebaseOptions(
+      //   apiKey: "AIzaSyBtr4YxUIDzMARKWHJUjtKYJoCo3RUQQmw",
+      //   appId: "1:30736213150:android:64ca324d5dea35c1a0078f",
+      //   messagingSenderId: "30736213150",
+      //   projectId: "cleanup-44c1b",
+      // ),
+      );
+
+  // await _msgService.init();
+  // FirebaseMessaging.onBackgroundMessage(backgroundHandler);
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
   runApp(const MyApp());
 }
 

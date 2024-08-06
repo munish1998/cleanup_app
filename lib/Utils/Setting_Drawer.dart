@@ -110,20 +110,20 @@ class SettingDrawer extends StatelessWidget {
                 Navigator.of(context).pop(); // Close the dialog
 
                 // Perform logout operation
-                await authProvider.logout(context);
-                customToast(
-                    context: context, msg: 'Logout successfully', type: 0);
+                // await authProvider.logout(context);
+                // customToast(
+                //     context: context, msg: 'Logout successfully', type: 0);
                 navPush(context: context, action: LoginScreen());
                 // Ensure that the widget is still mounted
 
                 // Show a Snackbar to indicate successful logout
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text('Successfully logged out'),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   SnackBar(
+                //     content: const Text('Successfully logged out'),
+                //     backgroundColor: Colors.green,
+                //     duration: const Duration(seconds: 2),
+                //   ),
+                // );
 
                 // Optionally, navigate to a different screen (e.g., login screen)
                 Navigator.pushReplacementNamed(context, '/login');

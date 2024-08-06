@@ -1,6 +1,7 @@
 import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
 import 'package:cleanup_mobile/LeaderboardScreen/LeaderScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
 import 'package:cleanup_mobile/ProfileScreen/ProfileScreen.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/SearchScreen.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
@@ -63,54 +64,59 @@ class _NewTask1State extends State<NewTask1> {
                 const SizedBox(
                   height: 15,
                 ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 10, right: 10),
-                      child: Card(
-                        color: AppColor.backgroundcontainerColor,
-                        elevation: 0.2,
-                        child: ListTile(
-                          leading: Image.asset('assets/images/image11.png'),
-                          title: const Text(
-                            '@Username',
-                            style: TextStyle(
-                                color: AppColor.usernamehomeColor,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: const Text('task title name'),
-                          trailing: Container(
-                              height: 20,
-                              width: 20,
-                              decoration: BoxDecoration(
-                                color: AppColor.rank1Color,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Container(
+                InkWell(
+                  onTap: () {
+                    // Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailTaskScreen(taskId: taskId)))
+                  },
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: 10,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 10, right: 10),
+                        child: Card(
+                          color: AppColor.backgroundcontainerColor,
+                          elevation: 0.2,
+                          child: ListTile(
+                            leading: Image.asset('assets/images/image11.png'),
+                            title: const Text(
+                              '@Username',
+                              style: TextStyle(
+                                  color: AppColor.usernamehomeColor,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: const Text('task title name'),
+                            trailing: Container(
                                 height: 20,
                                 width: 20,
                                 decoration: BoxDecoration(
-                                    color: Colors.blue.shade100,
-                                    borderRadius: BorderRadius.circular(100)),
-                                child: const Center(
-                                  child: Text(
-                                    '>',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: AppColor.rank1Color,
-                                      // fontSize: 20,
-                                      //fontWeight: FontWeight.bold
+                                  color: AppColor.rank1Color,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Container(
+                                  height: 20,
+                                  width: 20,
+                                  decoration: BoxDecoration(
+                                      color: Colors.blue.shade100,
+                                      borderRadius: BorderRadius.circular(100)),
+                                  child: const Center(
+                                    child: Text(
+                                      '>',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: AppColor.rank1Color,
+                                        // fontSize: 20,
+                                        //fontWeight: FontWeight.bold
+                                      ),
                                     ),
                                   ),
-                                ),
-                              )),
+                                )),
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -242,7 +248,7 @@ class _NewTask1State extends State<NewTask1> {
           showModalBottomSheet<void>(
               context: context,
               builder: (BuildContext context) {
-                return const SizedBox(
+                return SizedBox(
                   height: 750,
                   child: FriendListScreen(),
                 );

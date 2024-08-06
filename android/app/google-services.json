@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "30736213150",
+    "project_id": "cleanup-44c1b",
+    "storage_bucket": "cleanup-44c1b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:30736213150:android:64ca324d5dea35c1a0078f",
+        "android_client_info": {
+          "package_name": "com.example.cleanup_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "30736213150-3vma3o1fatv189f56kvdmrm3l7uoaghr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cleanup_mobile",
+            "certificate_hash": "938fad6cbf7b054b5f8e1fa26d8fae10f3b675f9"
+          }
+        },
+        {
+          "client_id": "30736213150-9mfbvpf08o171is0j93rpul14csva32o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs3LWU8ibikwA_Leh-gvw2XOD7OBY_Rck"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "30736213150-9mfbvpf08o171is0j93rpul14csva32o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

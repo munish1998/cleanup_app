@@ -122,9 +122,12 @@
 
 import 'dart:async';
 import 'dart:math';
-import 'package:cleanup_mobile/Utils/commonMethod.dart';
-import 'package:cleanup_mobile/videoPlyaer/tutorialpage.dart';
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
+import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cleanup_mobile/videoPlyaer/tutorialpage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -137,13 +140,13 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-
   bool _isAnimationCompleted = false;
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
     super.initState();
-
+    _init();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -161,21 +164,39 @@ class _SplashScreenState extends State<SplashScreen>
       setState(() {
         _isAnimationCompleted = true;
       });
+      _navigateToNextScreen();
     });
+  }
 
-    // After 5 seconds, navigate to the next screen
-    Timer(const Duration(seconds: 5), () {
+  Future<void> _init() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  void _navigateToNextScreen() {
+    if (_prefs!.getBool(isInitKey) ?? false) {
+      if (_prefs!.getBool(isUserLoginKey) ?? false) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => TutorialPage(
-                  videoAsset:
-                      'https://webpristine.com/work/cleanup/admin/vedio/vedio1.mp4',
-                  infoText: 'Welcome to cleanup mobile',
-                )),
+          builder: (context) => TutorialPage(
+            videoAsset:
+                'https://webpristine.com/work/cleanup/admin/vedio/vedio1.mp4',
+            infoText: 'Welcome to cleanup mobile',
+          ),
+        ),
       );
-      // Replace with your navigation logic
-    });
+    }
   }
 
   @override
@@ -193,8 +214,10 @@ class _SplashScreenState extends State<SplashScreen>
               return Stack(
                 children: [
                   CustomPaint(
-                    size: Size(MediaQuery.of(context).size.width,
-                        MediaQuery.of(context).size.height),
+                    size: Size(
+                      MediaQuery.of(context).size.width,
+                      MediaQuery.of(context).size.height,
+                    ),
                     painter: WavePainter(_animation.value),
                   ),
                   if (_animation.value == 1.0) // When animation completes
@@ -255,15 +278,12 @@ class WavePainter extends CustomPainter {
 
     // The y position of the waves
     double waveHeight1 = height * (1 - animationValue);
-    double waveHeight2 = height * (1 - animationValue) -
-        height * 0.2; // Adjust distance between waves here
+    double waveHeight2 = height * (1 - animationValue) - height * 0.2;
 
     // Draw the first wave
     path.moveTo(0, waveHeight1);
-    // path.moveTo(x, y)
-    double amplitude1 = 50.0; // Amplitude of the first wave
-    double waveFrequency1 =
-        2 * pi / width * 3; // Adjust frequency for the first wave
+    double amplitude1 = 50.0;
+    double waveFrequency1 = 2 * pi / width * 3;
 
     for (double i = 0; i <= width; i++) {
       path.lineTo(i, waveHeight1 - amplitude1 * sin(waveFrequency1 * i));
@@ -275,10 +295,8 @@ class WavePainter extends CustomPainter {
 
     // Draw the second wave
     path.moveTo(0, waveHeight2);
-
-    double amplitude2 = 70.0; // Amplitude of the second wave
-    double waveFrequency2 =
-        2 * pi / width * 2.5; // Adjust frequency for the second wave
+    double amplitude2 = 70.0;
+    double waveFrequency2 = 2 * pi / width * 2.5;
 
     for (double i = 0; i <= width; i++) {
       path.lineTo(i, waveHeight2 - amplitude2 * sin(waveFrequency2 * i));
@@ -287,6 +305,7 @@ class WavePainter extends CustomPainter {
     path.lineTo(width, height);
     path.lineTo(0, height);
     path.close();
+
     canvas.drawPath(path, paint);
   }
 
