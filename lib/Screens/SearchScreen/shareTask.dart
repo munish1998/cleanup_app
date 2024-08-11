@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:developer';
-import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
+import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
@@ -16,14 +16,14 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CreateTask extends StatefulWidget {
-  const CreateTask({super.key});
+class ShareTask extends StatefulWidget {
+  const ShareTask({super.key});
 
   @override
-  State<CreateTask> createState() => _CreateTaskState();
+  State<ShareTask> createState() => _ShareTaskState();
 }
 
-class _CreateTaskState extends State<CreateTask> {
+class _ShareTaskState extends State<ShareTask> {
   int _selectedIndex = 0;
 
   final TextEditingController _locationController = TextEditingController();
@@ -366,16 +366,17 @@ class _CreateTaskState extends State<CreateTask> {
       return;
     }
 
-    bool success =
-        await Provider.of<TaskProviders>(context, listen: false).createTask(
-      context: context,
-      title: title,
-      userid: userid,
-      location: location,
-      description: description,
-      beforeImage: _beforeImage!,
-      afterImage: _afterImage!,
-    );
+    bool success = await Provider.of<TaskProviders>(context, listen: false)
+        .sharecreateTask(
+            context: context,
+            title: title,
+            userid: userid,
+            location: location,
+            description: description,
+            beforeImage: _beforeImage!,
+            afterImage: _afterImage!,
+            sharetaskID: '23',
+            status: '2');
 
     if (success) {
       // Show success popup with sharing options
@@ -409,8 +410,9 @@ class _CreateTaskState extends State<CreateTask> {
                         onTap: () {
                           navPush(
                               context: context,
-                              action: FriendTaskScreen(
-                                taskid: '',
+                              action: FriendListScreen(
+                                taskid: taskProviders.comingTask.first.sharerId
+                                    .toString(),
                               ));
                           // Handle first image tap
                           print('Image 1 clicked');

@@ -54,16 +54,16 @@ class MyTask {
   }
 }
 
-class FriendListScreen extends StatefulWidget {
+class FriendTaskScreen extends StatefulWidget {
   String? taskid;
   MyTask? _taskk;
-  FriendListScreen({Key? key, required this.taskid}) : super(key: key);
+  FriendTaskScreen({Key? key, required this.taskid}) : super(key: key);
 
   @override
-  _FriendListScreenState createState() => _FriendListScreenState();
+  _FriendTaskScreenState createState() => _FriendTaskScreenState();
 }
 
-class _FriendListScreenState extends State<FriendListScreen> {
+class _FriendTaskScreenState extends State<FriendTaskScreen> {
   List<String> selectedFriends = []; // To keep track of selected friends
 
   @override
@@ -206,7 +206,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
       await taskProvider.shareTask(
         selectedFriends,
         context: context,
-        taskId: '', // Use taskid from the widget
+        taskId: taskProvider.tasks.first.id.toString() ??
+            '', // Use taskid from the widget
         friendIds: selectedFriends,
       );
 

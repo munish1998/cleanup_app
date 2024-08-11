@@ -20,13 +20,19 @@ class ApiServices {
   static const String getallUser = '${baseUrl}/api/auth/non-friends';
   static const String sendfreindRequest = '${baseUrl}/api/auth/friend-request';
   static const String pendingRequest = '${baseUrl}/api/auth/pending-requests';
-  static const String updateProfileBG =
-      '${baseUrl}user/edit_profile_bg_picture';
+  static const String incomingTask = '${baseUrl}/api/auth/task/incoming-tasks';
+  static const String updateProfileBG = '${baseUrl}/api/auth/profile/bgimage';
+  static const String updateProfileIMG = '${baseUrl}/api/auth/profile/image';
   static const String acceptRequest =
       '${baseUrl}/api/auth/friend-request/2/accept';
   static const String declineRequest =
       '${baseUrl}/api/auth/friend-request/1/decline';
+  static const String getprofileDetails = '${baseUrl}/api/auth/profile/details';
+  static const String editProfile = '${baseUrl}/api/auth/profile/update';
   static const String myFreinds = '${baseUrl}/api/auth/friends';
+  static String acceptTask(String shareId) =>
+      '$baseUrl/api/auth/task/accept/$shareId';
+  // static const String acceptTask = '${baseUrl}/api/auth/task/accept/$shareId';
   static const String termsCondition = '${baseUrl}user/terms';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String levels = '${baseUrl}user/levels';

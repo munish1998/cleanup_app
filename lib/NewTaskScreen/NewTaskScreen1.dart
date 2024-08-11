@@ -250,7 +250,7 @@ class _NewTask1State extends State<NewTask1> {
               builder: (BuildContext context) {
                 return SizedBox(
                   height: 750,
-                  child: FriendListScreen(),
+                  // child: FriendListScreen(taskid: taskpr,),
                 );
               });
           // Handle other menu items here

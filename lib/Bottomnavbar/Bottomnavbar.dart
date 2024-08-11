@@ -2,10 +2,12 @@ import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/LeaderboardScreen/LeaderScreen.dart';
 import 'package:cleanup_mobile/ProfileScreen/ProfileScreen.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/SearchScreen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -19,6 +21,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProviders>(context);
     return Container(
       height: 90,
       decoration: BoxDecoration(
@@ -172,7 +175,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
             builder: (BuildContext context) {
               return SizedBox(
                 height: 750,
-                child: FriendListScreen(),
+                child: FriendListScreen(
+                  taskid: '',
+                ),
               );
             },
           );

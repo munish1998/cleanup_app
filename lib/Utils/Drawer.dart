@@ -75,10 +75,10 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
             InkWell(
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => FriendListScreen()));
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //         builder: (context) => FriendListScreen()));
               },
               child: _listContent(
                 icon: Icons.search,

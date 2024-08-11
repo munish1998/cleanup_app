@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:cleanup_mobile/Models/comingtaskModel.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class User {
@@ -106,6 +110,7 @@ class DetailTaskScreen extends StatefulWidget {
 
 class _DetailTaskScreenState extends State<DetailTaskScreen> {
   Taskk? _task;
+  ComingTaskModel? _comingtask;
   bool _isLoading = true;
 
   @override
@@ -156,6 +161,25 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     }
   }
 
+  Future<void> _acceptTaskAndNavigate(String taskId) async {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+    // Accept the task
+    try {
+      await taskProvider.fetchTaskDetails(context, taskId);
+
+      // Navigate to ShareTaskScreen after task acceptance
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ShareTask(),
+        ),
+      );
+    } catch (error) {
+      _showError('Failed to accept task');
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -185,6 +209,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   Widget _buildTaskDetails() {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -220,6 +245,29 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
               label: 'After Image',
               imageUrl: _task!.afterImageUrl,
             ),
+            SizedBox(height: 20),
+            InkWell(
+              onTap: () => _acceptTaskAndNavigate(
+                  taskProvider.comingTask.first.id.toString()),
+              child: Container(
+                height: 54,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(17),
+                  color: AppColor.rank1Color,
+                ),
+                child: const Center(
+                  child: Text(
+                    'Accept',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -248,10 +296,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             SizedBox(height: 8),
             Text(
               content,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
           ],
         ),
@@ -280,30 +325,11 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             ),
             SizedBox(height: 8),
             imageUrl.isNotEmpty
-                ? Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(child: Text('Failed to load image'));
-                      },
-                    ),
-                  )
-                : Center(child: Text('No image available')),
+                ? Image.network(imageUrl)
+                : Text(
+                    'No image available',
+                    style: TextStyle(fontSize: 16, color: Colors.black87),
+                  ),
           ],
         ),
       ),

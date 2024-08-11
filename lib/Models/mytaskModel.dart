@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-class Task {
+class MyTask {
   final int id;
   final int userId;
   final String location;
@@ -13,7 +13,7 @@ class Task {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  Task({
+  MyTask({
     required this.id,
     required this.userId,
     required this.location,
@@ -28,8 +28,8 @@ class Task {
   });
 
   // Factory constructor to create an instance from JSON data
-  factory Task.fromJson(Map<String, dynamic> json) {
-    return Task(
+  factory MyTask.fromJson(Map<String, dynamic> json) {
+    return MyTask(
       id: json['id'],
       userId: json['user_id'],
       location: json['location'],

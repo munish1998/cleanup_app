@@ -1,7 +1,9 @@
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cleanup_mobile/Models/pendingRequest.dart'; // Adjust the import according to your file structure
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Models/pendingRequest.dart';
 
 class PendingListScreen extends StatefulWidget {
   const PendingListScreen({super.key});
@@ -32,8 +34,11 @@ class _PendingListScreenState extends State<PendingListScreen> {
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .acceptFriendRequest(context: context, requestId: requestId);
-      // Optionally refresh the pending requests list
-      _fetchPendingRequests();
+      // Navigate to ShareTaskScreen upon success
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ShareTask()),
+      );
     } catch (e) {
       // Handle any errors that occur during acceptance
       print('Error accepting friend request: $e');
@@ -72,15 +77,7 @@ class _PendingListScreenState extends State<PendingListScreen> {
             itemCount: pendingRequests.length,
             itemBuilder: (context, index) {
               final request = pendingRequests[index];
-              final requestId = request.id;
-
-              // Ensure requestId is not null before using it
-              if (requestId == null) {
-                return ListTile(
-                  title: Text(request.sender?.name ?? 'Unknown'),
-                  subtitle: Text('Request ID: Unknown'),
-                );
-              }
+              final int requestId = request.id ?? 0; // Default value if null
 
               return ListTile(
                 title: Text(request.sender?.name ?? 'Unknown'),

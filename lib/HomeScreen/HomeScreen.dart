@@ -1,15 +1,16 @@
 import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
-import 'package:cleanup_mobile/MyTaskScreen/MyTaskScreen.dart';
 import 'package:cleanup_mobile/MyTaskScreen/myTask.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
-import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen1.dart';
-import 'package:cleanup_mobile/PendingTaskScreen/PendingScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/newtasksScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/pendingTask.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/pendilistRequest.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Drawer.dart';
 import 'package:cleanup_mobile/Utils/Setting_Drawer.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+// Import your TaskProvider here
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,8 +24,19 @@ class _HomeScreenState extends State<HomeScreen> {
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch tasks when the screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+      taskProvider.getMyTaskList(context: context);
+      taskProvider.fetchIncomingTasks('pending'); // Adjust status as needed
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final taskProvider = Provider.of<TaskProviders>(context);
 
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 248, 253, 255),
@@ -85,37 +97,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   _buildTaskCard(
                     context,
-                    title: 'New Task',
+                    title: 'Pending Task',
                     image: 'assets/images/image8.png',
-                    trailing: '10+',
+                    trailing: '${taskProvider.comingTask.length}',
                     trailingColor: Colors.purple,
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const NewTask1()),
+                      MaterialPageRoute(
+                          builder: (context) => PendingTaskkScreen(
+                                taskid: '',
+                              )),
                     ),
                   ),
                   _buildTaskCard(
                     context,
-                    title: 'Pending Task',
+                    title: 'New Task',
                     image: 'assets/images/image8.png',
-                    trailing: '10+',
+                    trailing: '${taskProvider.comingTask.length}',
+                    trailingColor: Colors.purple,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => UpcomingTaskScreen(
+                                taskId: taskProvider.mytasklist.first.id,
+                              )),
+                    ),
+                  ),
+                  _buildTaskCard(
+                    context,
+                    title: 'Pending request',
+                    image: 'assets/images/image8.png',
+                    trailing: '${taskProvider.pending.length}',
                     trailingColor: Colors.orange,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PendingTask()),
+                          builder: (context) => const PendingListScreen()),
                     ),
                   ),
                   _buildTaskCard(
                     context,
                     title: 'Complete Task',
                     image: 'assets/images/image8.png',
-                    trailing: '10+',
+                    trailing: '${taskProvider.mytasklist.length}',
                     trailingColor: Colors.purple,
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PendingListScreen()),
+                          builder: (context) => UpcomingTaskScreen(
+                                taskId: taskProvider.mytasklist.first.id,
+                              )),
                     ),
                   ),
                   const SizedBox(height: 17),

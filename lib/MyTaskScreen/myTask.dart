@@ -1,12 +1,10 @@
-import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
-import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// Adjust import based on your project structure
-import 'package:cleanup_mobile/Utils/AppConstant.dart'; // Adjust import based on your project structure
-import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart'; // Adjust import based on your project structure
-import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart'; // Adjust import based on your project structure
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
+import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
 
 class MyTaskList extends StatefulWidget {
   const MyTaskList({Key? key}) : super(key: key);
@@ -34,11 +32,20 @@ class _MyTaskListState extends State<MyTaskList> {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 248, 253, 255),
       appBar: AppBar(
+        backgroundColor: AppColor.rank1Color,
+        // Remove the leading widget
         leading: InkWell(
           onTap: () {
-            Navigator.pop(context);
+            // Implement the desired action here
+            Navigator.pop(context); // This will navigate back when tapped
           },
-          child: const Icon(Icons.arrow_back),
+          child: Container(
+            padding: EdgeInsets.all(12),
+            child: Icon(
+              Icons.arrow_back, // You can use any icon here
+              color: Colors.black,
+            ),
+          ),
         ),
         centerTitle: true,
         title: const Text(
@@ -49,69 +56,59 @@ class _MyTaskListState extends State<MyTaskList> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 15),
-            child: InkWell(
-              onTap: () {
-                // Implement action if needed
-              },
-              child: Image.asset(
-                'assets/images/image28.png',
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ],
       ),
       body: Consumer<TaskProviders>(
         builder: (context, taskProvider, child) {
           if (taskProvider.mytasklist.isEmpty) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: Text('No Task Found'),
+            );
           }
 
           return Padding(
-            padding: const EdgeInsets.only(left: 15, top: 15),
+            padding: const EdgeInsets.all(15.0),
             child: ListView.builder(
               itemCount: taskProvider.mytasklist.length,
               itemBuilder: (context, index) {
                 final task = taskProvider.mytasklist[index];
-                return Card(
-                  color: AppColor.backgroundcontainerColor,
-                  elevation: 0.2,
-                  child: ListTile(
-                    leading: Image.network('${task.baseUrl}${task.before}'),
-                    title: Text(
-                      '@${task.title}',
-                      style: TextStyle(
-                        color: AppColor.usernamehomeColor,
-                        fontWeight: FontWeight.bold,
+                return InkWell(
+                  onTap: () {
+                    // Navigate to the detail screen when the card is tapped
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailTaskScreen(taskId: task.id),
                       ),
+                    );
+                  },
+                  child: Card(
+                    color: AppColor.backgroundcontainerColor,
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    subtitle: Text(task.description),
-                    trailing: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    DetailTaskScreen(taskId: task.id)));
-                      },
-                      child: Container(
-                        height: 20,
-                        width: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          borderRadius: BorderRadius.circular(100),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(12),
+                      leading: CircleAvatar(
+                        backgroundImage:
+                            NetworkImage('${task.baseUrl}${task.before}'),
+                        radius: 30, // Adjust radius as needed
+                      ),
+                      title: Text(
+                        '@${task.title}',
+                        style: TextStyle(
+                          color: AppColor.usernamehomeColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
-                        child: const Center(
-                          child: Text(
-                            '>',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.blue,
-                            ),
-                          ),
+                      ),
+                      subtitle: Text(
+                        task.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
                         ),
                       ),
                     ),

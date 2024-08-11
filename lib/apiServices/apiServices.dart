@@ -181,25 +181,31 @@ class ApiClient {
   }) async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      var token = prefs.getString(accessTokenKey) ?? '';
+      String? token =
+          prefs.getString('accessTokenKey'); // Replace with your token key
 
-      if (token.isEmpty) {
-        log('Error: Access token is empty.');
+      if (token == null || token.isEmpty) {
         throw Exception('Access token is missing.');
       }
 
-      var header = {
+      Map<String, String> headers = {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/x-www-form-urlencoded',
       };
 
-      log('Header::---->>>  $header');
-      log('Body::---->>>  $body');
+      // Log headers and body for debugging
+      print('Header::---->>>  $headers');
+      print('Body::---->>>  $body');
 
-      final response = await http.post(url, body: body, headers: header);
+      final response = await http.post(
+        url,
+        body: body,
+        headers: headers,
+      );
 
-      log('Response__POST___====>>${response.body.toString()}');
-      log('Response status code: ${response.statusCode}');
+      // Log response for debugging
+      print('Response__POST___====>>${response.body.toString()}');
+      print('Response status code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return response;
@@ -207,15 +213,15 @@ class ApiClient {
         throw Exception('Unexpected status code: ${response.statusCode}');
       }
     } on SocketException catch (e) {
-      log('Socket Exception thrown --> $e');
-      commonAlert(context, 'Unable to connect to server!');
+      print('Socket Exception thrown --> $e');
+      // _showAlert(context, 'Unable to connect to server!');
       return http.Response(e.toString(), 1);
     } on TimeoutException catch (e) {
-      log('TimeoutException thrown --> $e');
-      commonAlert(context, 'Please! Try Again');
+      print('TimeoutException thrown --> $e');
+      //  _showAlert(context, 'Please try again');
       return http.Response(e.toString(), 1);
     } catch (e) {
-      log('Exception thrown --> $e');
+      print('Exception thrown --> $e');
       return http.Response(e.toString(), 1);
     }
   }

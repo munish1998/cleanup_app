@@ -345,6 +345,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       commonToast(msg: 'Invalid email format', color: Colors.red);
     } else if (pro.phoneController.text.isEmpty) {
       log('Contact number is required');
+
       commonToast(msg: 'Contact number is required', color: Colors.red);
     } else if (pro.locationController.text.isEmpty) {
       log('Country is required');

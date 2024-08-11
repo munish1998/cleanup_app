@@ -787,7 +787,7 @@ class _LoginScreenState extends State<LoginScreen> {
       };
 
       pro.forgotPass(context: context, data: data).then((value) {
-        navPush(context: context, action: HomeScreen());
+        navPushRemove(context: context, action: HomeScreen());
       }).catchError((error) {
         log('SignUp Error: $error');
         commonToast(msg: 'SignUp Error: $error', color: Colors.red);

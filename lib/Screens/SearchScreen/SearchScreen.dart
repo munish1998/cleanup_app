@@ -1,6 +1,7 @@
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Models/userModel.dart'; // Ensure correct import
 
 class SearchScreen extends StatefulWidget {
@@ -13,6 +14,15 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   // Track which users have been requested
   Set<int> _requestedUsers = Set<int>();
+
+  // List of all users
+  List<AllUserModel> _allUsers = [];
+
+  // Filtered list based on search query
+  List<AllUserModel> _filteredUsers = [];
+
+  // Search query
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -40,96 +50,127 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  // Filter users based on the search query
+  void _filterUsers(String query) {
+    setState(() {
+      _searchQuery = query;
+      _filteredUsers = _allUsers
+          .where((user) =>
+              user.username?.toLowerCase().contains(query.toLowerCase()) ??
+              false)
+          .toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColor.rank1Color,
+        title: Text('Search User'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
       backgroundColor: Color.fromARGB(255, 248, 253, 255),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 60, left: 12, right: 12),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  icon: InkWell(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Icon(Icons.arrow_back)),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                SizedBox(
-                    width: 10), // Add space between arrow back and TextField
-                Expanded(
-                  child: Container(
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: Colors.white, // Use your defined color
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: const Row(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Icon(Icons.search),
-                        ),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Search...',
-                            ),
-                          ),
-                        ),
-                      ],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Icon(Icons.search),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      onChanged: _filterUsers,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Search by username...',
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            Consumer<TaskProviders>(
+          ),
+          Expanded(
+            child: Consumer<TaskProviders>(
               builder: (context, provider, child) {
                 if (provider.allUser.isEmpty) {
                   return Center(child: Text('No users found'));
                 }
 
-                return Expanded(
-                  child: ListView.builder(
-                    itemCount: provider.allUser.length,
-                    itemBuilder: (context, index) {
-                      var user = provider.allUser[index];
-                      bool isRequested = _requestedUsers.contains(user.id);
+                // Update _allUsers and _filteredUsers when new data is fetched
+                if (_allUsers.isEmpty) {
+                  _allUsers = provider.allUser;
+                  _filteredUsers = _allUsers;
+                }
 
-                      return ListTile(
-                        title: Text(user.name ?? 'No Name'),
+                return ListView.builder(
+                  itemCount: _filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    var user = _filteredUsers[index];
+                    bool isRequested = _requestedUsers.contains(user.id);
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 12.0),
+                      color: Colors.white, // Set card background color to white
+                      elevation: 4,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.all(12.0),
+                        leading: CircleAvatar(
+                          backgroundImage: user.image != null
+                              ? NetworkImage(user.image!)
+                              : AssetImage('assets/images/image27.png')
+                                  as ImageProvider,
+                          radius: 24,
+                        ),
+                        title: Text(user.name ?? 'No Username'),
                         subtitle: Text(user.email ?? 'No Email'),
-                        trailing: TextButton(
-                          onPressed: () {
-                            if (!isRequested) {
-                              _sendFriendRequest(user.id);
-                            }
-                          },
-                          child: Text(
-                            isRequested ? 'Requested' : 'Send Request',
-                            style: TextStyle(
-                              color: isRequested ? Colors.grey : Colors.blue,
+                        trailing: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.0),
+                          child: TextButton(
+                            onPressed: () {
+                              if (!isRequested) {
+                                _sendFriendRequest(user.id);
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor:
+                                  isRequested ? Colors.black : Colors.white,
+                              backgroundColor:
+                                  isRequested ? Colors.grey[300] : Colors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              isRequested ? 'Requested' : 'Send Request',
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
