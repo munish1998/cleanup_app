@@ -2,10 +2,14 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
+import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
+import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
 import 'package:cleanup_mobile/Models/comingtaskModel.dart';
+import 'package:cleanup_mobile/Models/completetaskModel.dart';
 import 'package:cleanup_mobile/Models/detailtaskModel.dart';
 import 'package:cleanup_mobile/Models/myfriendsModel.dart';
 import 'package:cleanup_mobile/Models/mytaskModel.dart';
+import 'package:cleanup_mobile/Models/newtaskModel.dart';
 import 'package:cleanup_mobile/Models/pendingRequest.dart';
 import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
 import 'package:cleanup_mobile/Models/userModel.dart';
@@ -26,6 +30,8 @@ class TaskProviders with ChangeNotifier {
   bool get isLoading => _isLoading; // Getter for the loading state
   List<MyTask> _mytasklist = [];
   List<MyTask> get mytasklist => _mytasklist;
+  List<MyTaskModel> _mytask = [];
+  List<MyTaskModel> get mytask => _mytask;
   List<Taskk> _tasks = [];
   List<PendingRequestModel> _pending = [];
   List<PendingRequestModel> get pending => _pending;
@@ -34,6 +40,8 @@ class TaskProviders with ChangeNotifier {
   List<AllUserModel> get allUser => _allUser;
   List<MyFriendsModel> _myfreinds = [];
   List<MyFriendsModel> get myfriends => _myfreinds;
+  List<CompleteTaskModel> _mycompletes = [];
+  List<CompleteTaskModel> get mycompletes => _mycompletes;
   List<ComingTaskModel> _comingTask = [];
   List<PendingTaskModel> _pendingTask = [];
   List<PendingTaskModel> get pendingTask => _pendingTask;
@@ -57,6 +65,52 @@ class TaskProviders with ChangeNotifier {
   bool _isExercise = false;
 
   bool get isExercise => _isExercise;
+
+  Future<void> getMyTaskList({required BuildContext context}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final url = Uri.parse(ApiServices.getmytaskList);
+
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      //log('Response status: ${response.statusCode}');
+      log('my task response : ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> result = jsonDecode(response.body);
+
+        if (result['success'] == true) {
+          // Assuming 'tasks' is a list of task data
+          _mytasklist = (result['tasks'] as List)
+              .map((taskData) => MyTask.fromJson(taskData))
+              .toList();
+        } else {
+          _mytasklist = [];
+          customToast(context: context, msg: result['message'], type: 0);
+        }
+      } else {
+        _mytasklist = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _mytasklist = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> acceptTask(BuildContext context, String shareId) async {
     final String url = ApiServices.acceptTask(shareId);
@@ -113,13 +167,13 @@ class TaskProviders with ChangeNotifier {
       // Log the full response for debugging
       log('Response status: ${response.statusCode}');
       log('Response headers: ${response.headers}');
-      log('Response body: ${response.body}');
+      log('incoming task response: ${response.body}');
 
       // Check if the response content type is JSON
       if (response.headers['content-type']?.contains('application/json') ==
           true) {
         // Decode the JSON response
-        List<dynamic> jsonList = jsonDecode(response.body);
+        List<dynamic> jsonList = jsonDecode(response.body) as List<dynamic>;
 
         // Convert the list of JSON objects to a list of ComingTaskModel
         _comingTask =
@@ -160,9 +214,9 @@ class TaskProviders with ChangeNotifier {
       );
 
       // Log the full response for debugging
-      log('Response status: ${response.statusCode}');
+      ////  log('Response status: ${response.statusCode}');
       log('Response headers: ${response.headers}');
-      log('Response body: ${response.body}');
+      log('Response of pending/user/completed task: ${response.body}');
 
       // Check if the response content type is JSON
       if (response.headers['content-type']?.contains('application/json') ==
@@ -186,48 +240,6 @@ class TaskProviders with ChangeNotifier {
       // customToast(context: context, msg: 'An error occurred', type: 0);
     }
 
-    notifyListeners();
-  }
-
-  Future<void> getMyTaskList({required BuildContext context}) async {
-    // _isLoading = true;
-    final url = Uri.parse(ApiServices.getmytaskList); // Ensure this is correct
-
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    final String? accessToken = pref.getString(accessTokenKey);
-
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      final response = await http.get(url, headers: headers);
-
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> result = jsonDecode(response.body);
-
-        if (result['success'] == true) {
-          _mytasklist = (result['tasks'] as List)
-              .map((taskData) => MyTask.fromJson(taskData))
-              .toList();
-        } else {
-          _mytasklist = [];
-          customToast(context: context, msg: result['message'], type: 0);
-        }
-      } else {
-        _mytasklist = [];
-        customToast(context: context, msg: 'Server error', type: 0);
-      }
-    } catch (e) {
-      log('Error: $e');
-      _mytasklist = [];
-      customToast(context: context, msg: 'An error occurred', type: 0);
-    }
-    //_isLoading = false;
     notifyListeners();
   }
 
@@ -281,6 +293,8 @@ class TaskProviders with ChangeNotifier {
     required String userid,
     required String location,
     required String description,
+    required String share_task_id,
+    required String status,
     File? beforeImage,
     File? afterImage,
   }) async {
@@ -294,6 +308,8 @@ class TaskProviders with ChangeNotifier {
     request.fields['location'] = location;
     request.fields['description'] = description;
     request.fields['user_id'] = userid;
+    request.fields['share_task_id'] = share_task_id;
+    request.fields['status'] = status;
 
     // Add image files
     if (beforeImage != null) {
@@ -320,15 +336,33 @@ class TaskProviders with ChangeNotifier {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      // Log the raw response
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
+      log('create task response ===>>>>: ${response.body}');
 
       if (response.statusCode == 200) {
         var result = jsonDecode(response.body);
         if (result['success']) {
+          // Extract task ID from the response
+          final taskId = result['task']['id'];
+
           notifyListeners();
           commonToast(msg: result['message'], color: Colors.blue);
+          void _showShareOptionsBottomSheet(
+            BuildContext context,
+          ) {
+            final taskProviders =
+                Provider.of<TaskProviders>(context, listen: false);
+          }
+
+          // Navigate to FriendListScreen with the task ID
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    FriendTaskScreen(taskid: taskId.toString()),
+              ),
+            );
+          });
+
           return true; // Task created successfully
         } else {
           commonToast(msg: result['message'], color: Colors.red);
@@ -685,13 +719,14 @@ class TaskProviders with ChangeNotifier {
     request.headers['access_token'] = accessToken ?? '';
     request.headers['Content-Type'] = 'multipart/form-data';
     log('accesstoken=====>>>${accessToken ?? ''}');
+    log('response of sharetaskid====>>>>$sharetaskID');
 
     try {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
       // Log the raw response
-      //log('Response status: ${response.statusCode}');
+      log('Response status: ${response.statusCode}');
       log('share task response : ${response.body}');
 
       if (response.statusCode == 200) {

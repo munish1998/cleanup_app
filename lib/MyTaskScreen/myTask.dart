@@ -33,16 +33,14 @@ class _MyTaskListState extends State<MyTaskList> {
       backgroundColor: Color.fromARGB(255, 248, 253, 255),
       appBar: AppBar(
         backgroundColor: AppColor.rank1Color,
-        // Remove the leading widget
         leading: InkWell(
           onTap: () {
-            // Implement the desired action here
             Navigator.pop(context); // This will navigate back when tapped
           },
           child: Container(
             padding: EdgeInsets.all(12),
             child: Icon(
-              Icons.arrow_back, // You can use any icon here
+              Icons.arrow_back,
               color: Colors.black,
             ),
           ),
@@ -90,12 +88,11 @@ class _MyTaskListState extends State<MyTaskList> {
                     child: ListTile(
                       contentPadding: EdgeInsets.all(12),
                       leading: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage('${task.baseUrl}${task.before}'),
-                        radius: 30, // Adjust radius as needed
+                        backgroundImage: NetworkImage('${task.before}'),
+                        radius: 30,
                       ),
                       title: Text(
-                        '@${task.title}',
+                        '${task.title}',
                         style: TextStyle(
                           color: AppColor.usernamehomeColor,
                           fontWeight: FontWeight.bold,

@@ -171,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               },
                             )
                           : Image.asset(
-                              'assets/images/image28.png', // Placeholder image
+                              'assets/images/image13.png', // Placeholder image
                               fit: BoxFit.cover,
                             ),
                 ),
@@ -434,7 +434,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   width: 5,
                                 ),
                                 Text(
-                                  data.dob.toString(),
+                                  data.dob != null
+                                      ? data.dob
+                                          .toString() // Assuming data.dob is a DateTime object
+                                      : 'YY-MM-YY',
                                   style: TextStyle(color: Colors.black45),
                                 )
                               ],

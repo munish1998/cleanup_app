@@ -1,3 +1,4 @@
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Providers/authProvider.dart';
@@ -7,6 +8,7 @@ import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -148,6 +150,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 15),
                                 child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment
+                                      .start, // Align items at the start
                                   children: [
                                     Checkbox(
                                       value: _isChecked,
@@ -158,34 +162,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       },
                                     ),
                                     const SizedBox(width: 10),
-                                    RichText(
-                                      text: const TextSpan(
-                                        style: TextStyle(fontSize: 15),
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'I agree to the Cleaning ',
-                                            style: TextStyle(
-                                              color: Colors.black,
+                                    Expanded(
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.black),
+                                          children: <TextSpan>[
+                                            const TextSpan(
+                                              text: 'I agree to the Cleaning ',
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: 'Terms of Service ',
-                                            style: TextStyle(
-                                              color: AppColor.rank1Color,
+                                            TextSpan(
+                                              text: 'Terms of Service ',
+                                              style: TextStyle(
+                                                  color: AppColor.rank1Color),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: 'and\n ',
-                                            style: TextStyle(
-                                              color: Colors.black,
+                                            const TextSpan(
+                                              text: 'and ',
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: 'Privacy Policy',
-                                            style: TextStyle(
-                                                color: AppColor.rank1Color),
-                                          ),
-                                        ],
+                                            TextSpan(
+                                              text: 'Privacy Policy',
+                                              style: TextStyle(
+                                                  color: AppColor.rank1Color),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -271,6 +272,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  // Import this for input formatters
+
   Widget textfields({
     required BuildContext context,
     required TextEditingController controller,
@@ -298,6 +301,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           obscureText: ispas,
           textCapitalization: TextCapitalization.none,
           controller: controller,
+          inputFormatters: index == 3
+              ? [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(
+                      12), // Limits input to 12 digits
+                ]
+              : [],
           autovalidateMode: AutovalidateMode.onUserInteraction,
           style: const TextStyle(color: Colors.grey),
           decoration: InputDecoration(
@@ -333,7 +343,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void onTap() {
     var pro = Provider.of<AuthProvider>(context, listen: false);
-    var data = {};
+
     if (pro.nameController.text.isEmpty) {
       log('Name is required');
       commonToast(msg: 'Name is required', color: Colors.red);
@@ -345,11 +355,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       commonToast(msg: 'Invalid email format', color: Colors.red);
     } else if (pro.phoneController.text.isEmpty) {
       log('Contact number is required');
-
       commonToast(msg: 'Contact number is required', color: Colors.red);
     } else if (pro.locationController.text.isEmpty) {
-      log('Country is required');
-      commonToast(msg: 'Country is required', color: Colors.red);
+      log('Location is required');
+      commonToast(msg: 'Location is required', color: Colors.red);
     } else if (pro.passController.text.isEmpty) {
       log('Password is required');
       commonToast(msg: 'Password is required', color: Colors.red);
@@ -376,8 +385,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'password_confirmation': pro.cPassController.text,
         'is_admin': "0",
       };
+
       pro.signUp(context: context, data: data).then((value) {
-        navPush(context: context, action: LoginScreen());
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false, // Remove all previous routes
+        );
       }).catchError((error) {
         log('SignUp Error: $error');
         commonToast(msg: 'SignUp Error: $error', color: Colors.red);

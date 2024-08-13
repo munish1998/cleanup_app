@@ -1,4 +1,5 @@
 import 'package:cleanup_mobile/Auth_Screen/Login.dart';
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
 import 'package:cleanup_mobile/TutorialScreen/Tutorial1.dart';
 import 'package:cleanup_mobile/TutorialScreen/Tutorial2.dart';

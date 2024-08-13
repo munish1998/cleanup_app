@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
 import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -231,10 +233,11 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
               content: _task!.description,
             ),
             SizedBox(height: 16),
-            _buildDetailCard(
-              title: 'Status',
-              content: _task!.status,
-            ),
+            TextButton(
+                onPressed: () {
+                  _showShareOptionsBottomSheet(context);
+                },
+                child: Text('share task')),
             SizedBox(height: 16),
             _buildImageCard(
               label: 'Before Image',
@@ -247,8 +250,12 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             ),
             SizedBox(height: 20),
             InkWell(
-              onTap: () => _acceptTaskAndNavigate(
-                  taskProvider.comingTask.first.id.toString()),
+              onTap: () {
+                navPush(
+                  context: context,
+                  action: FriendTaskScreen(taskid: widget.taskId.toString()),
+                );
+              },
               child: Container(
                 height: 54,
                 width: double.infinity,
@@ -258,7 +265,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                 ),
                 child: const Center(
                   child: Text(
-                    'Accept',
+                    'Share Task',
                     style: TextStyle(
                       fontSize: 20,
                       color: Colors.white,
@@ -332,6 +339,73 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                   ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showShareOptionsBottomSheet(BuildContext context) {
+    final taskProviders = Provider.of<TaskProviders>(context, listen: false);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Row with centered clickable images
+              Column(
+                children: [
+                  Text(
+                    'Invite freinds',
+                    style: TextStyle(color: Colors.black, fontSize: 10),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          navPush(
+                              context: context,
+                              action: FriendTaskScreen(
+                                  taskid: widget.taskId.toString()));
+                          // Handle first image tap
+                          print('Image 1 clicked');
+                        },
+                        child: Image.asset('assets/images/image16.png'),
+                      ),
+                      SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          // Handle second image tap
+                          print('Image 2 clicked');
+                        },
+                        child: Image.asset('assets/images/image15.png'),
+                      ),
+                      SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: () {
+                          // Handle third image tap
+                          print('Image 3 clicked');
+                        },
+                        child: Image.asset('assets/images/image14.png'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColor.appbarColor,
       ),
     );
   }

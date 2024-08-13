@@ -49,7 +49,7 @@ class _CreateTaskState extends State<CreateTask> {
         ),
         centerTitle: true,
         title: const Text(
-          'New Task',
+          'Create Task',
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
@@ -366,26 +366,31 @@ class _CreateTaskState extends State<CreateTask> {
       return;
     }
 
-    bool success =
-        await Provider.of<TaskProviders>(context, listen: false).createTask(
-      context: context,
-      title: title,
-      userid: userid,
-      location: location,
-      description: description,
-      beforeImage: _beforeImage!,
-      afterImage: _afterImage!,
-    );
+    bool success = await Provider.of<TaskProviders>(context, listen: false)
+        .createTask(
+            context: context,
+            title: title,
+            userid: userid,
+            location: location,
+            description: description,
+            beforeImage: _beforeImage!,
+            afterImage: _afterImage!,
+            share_task_id: '0',
+            status: '1');
 
     if (success) {
-      // Show success popup with sharing options
-      _showShareOptionsBottomSheet(context);
+      //  _showShareOptionsBottomSheet(context);
+      // Since createTask is a boolean, you need to handle the success without expecting additional data
+      // No need to call _showShareOptionsBottomSheet here
+      // Navigate to FriendListScreen with the task ID
     } else {
       _showErrorSnackbar(context, 'Failed to create task.');
     }
   }
 
-  void _showShareOptionsBottomSheet(BuildContext context) {
+  void _showShareOptionsBottomSheet(
+    BuildContext context,
+  ) {
     final taskProviders = Provider.of<TaskProviders>(context, listen: false);
     showModalBottomSheet<void>(
       context: context,
@@ -410,8 +415,8 @@ class _CreateTaskState extends State<CreateTask> {
                           navPush(
                               context: context,
                               action: FriendTaskScreen(
-                                taskid: '',
-                              ));
+                                  taskid: taskProviders.mytasklist.first.id
+                                      .toString()));
                           // Handle first image tap
                           print('Image 1 clicked');
                         },

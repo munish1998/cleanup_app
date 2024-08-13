@@ -31,11 +31,10 @@ class _ShareTaskState extends State<ShareTask> {
   final TextEditingController _tasktitleController = TextEditingController();
   File? _beforeImage;
   File? _afterImage;
-  File? _selectedImage;
-  File? _selectImage1;
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProviders>(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromARGB(255, 248, 253, 255),
@@ -343,6 +342,7 @@ class _ShareTaskState extends State<ShareTask> {
   }
 
   void _saveTask(BuildContext context) async {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
     final title = _tasktitleController.text.trim();
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
@@ -366,78 +366,65 @@ class _ShareTaskState extends State<ShareTask> {
       return;
     }
 
-    bool success = await Provider.of<TaskProviders>(context, listen: false)
-        .sharecreateTask(
-            context: context,
-            title: title,
-            userid: userid,
-            location: location,
-            description: description,
-            beforeImage: _beforeImage!,
-            afterImage: _afterImage!,
-            sharetaskID: '23',
-            status: '2');
+    bool success = await taskProvider.sharecreateTask(
+        context: context,
+        title: title,
+        userid: userid,
+        location: location,
+        description: description,
+        beforeImage: _beforeImage!,
+        afterImage: _afterImage!,
+        sharetaskID: taskProvider.comingTask.first.sharer!.id.toString(),
+        status: '2');
 
     if (success) {
-      // Show success popup with sharing options
-      _showShareOptionsBottomSheet(context);
+      //  _showShareOptionsBottomSheet(context);
     } else {
       _showErrorSnackbar(context, 'Failed to create task.');
     }
   }
 
-  void _showShareOptionsBottomSheet(BuildContext context) {
-    final taskProviders = Provider.of<TaskProviders>(context, listen: false);
-    showModalBottomSheet<void>(
+  void _showBottomSheet(BuildContext context, bool isBeforeImage) {
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
+      builder: (context) {
+        return Container(
+          height: 200,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Row with centered clickable images
-              Column(
-                children: [
-                  Text(
-                    'Invite freinds',
-                    style: TextStyle(color: Colors.black, fontSize: 10),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          navPush(
-                              context: context,
-                              action: FriendListScreen(
-                                taskid: taskProviders.comingTask.first.sharerId
-                                    .toString(),
-                              ));
-                          // Handle first image tap
-                          print('Image 1 clicked');
-                        },
-                        child: Image.asset('assets/images/image16.png'),
-                      ),
-                      SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          // Handle second image tap
-                          print('Image 2 clicked');
-                        },
-                        child: Image.asset('assets/images/image15.png'),
-                      ),
-                      SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          // Handle third image tap
-                          print('Image 3 clicked');
-                        },
-                        child: Image.asset('assets/images/image14.png'),
-                      ),
-                    ],
-                  ),
-                ],
+              ListTile(
+                leading: Icon(Icons.camera),
+                title: Text('Camera'),
+                onTap: () async {
+                  final pickedImage = await _pickImage(ImageSource.camera);
+                  if (pickedImage != null) {
+                    setState(() {
+                      if (isBeforeImage) {
+                        _beforeImage = pickedImage;
+                      } else {
+                        _afterImage = pickedImage;
+                      }
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Gallery'),
+                onTap: () async {
+                  final pickedImage = await _pickImage(ImageSource.gallery);
+                  if (pickedImage != null) {
+                    setState(() {
+                      if (isBeforeImage) {
+                        _beforeImage = pickedImage;
+                      } else {
+                        _afterImage = pickedImage;
+                      }
+                    });
+                    Navigator.pop(context);
+                  }
+                },
               ),
             ],
           ),
@@ -446,107 +433,18 @@ class _ShareTaskState extends State<ShareTask> {
     );
   }
 
+  Future<File?> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+    if (pickedFile != null) {
+      return File(pickedFile.path);
+    }
+    return null;
+  }
+
   void _showErrorSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColor.appbarColor,
-      ),
+      SnackBar(content: Text(message)),
     );
-  }
-
-  Widget _buildMenuItem(IconData icon, String text, BuildContext context,
-      void Function() param3) {
-    final taskProviders = Provider.of<TaskProviders>(context, listen: false);
-    return GestureDetector(
-      onTap: () {
-        // Handle tap on menu item
-        Navigator.pop(context); // Close the bottom sheet
-        if (text == 'Account Details') {
-          // Open bottom sheet for Account Details
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (BuildContext context) {
-              return const SizedBox(
-                height: 857,
-                child: ProfileScreen(),
-              );
-            },
-          );
-        } else if (text == 'Friends List') {
-          showModalBottomSheet<void>(
-            context: context,
-            builder: (BuildContext context) {
-              return SizedBox(
-                height: 750,
-                child: FriendListScreen(
-                  taskid: taskProviders.tasks.first.id.toString(),
-                ),
-              );
-            },
-          );
-          // Handle other menu items here
-        }
-      },
-      child: Row(
-        children: <Widget>[
-          Icon(
-            icon,
-            color: Colors.blue,
-          ),
-          const SizedBox(width: 10),
-          Text(text),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showBottomSheet(
-      BuildContext context, bool isBeforeImage) async {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        message: Text('Choose Image'),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              getPicker(ImageSource.camera, isBeforeImage);
-              Navigator.pop(context);
-            },
-            child: Text('Camera'),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              getPicker(ImageSource.gallery, isBeforeImage);
-              Navigator.pop(context);
-            },
-            child: Text('Gallery'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> getPicker(ImageSource imageSource, bool isBeforeImage) async {
-    try {
-      XFile? image = await ImagePicker().pickImage(
-        source: imageSource,
-        maxWidth: 1024,
-        maxHeight: 1024,
-      );
-      if (image != null) {
-        setState(() {
-          if (isBeforeImage) {
-            _beforeImage = File(image.path); // Set before image
-          } else {
-            _afterImage = File(image.path); // Set after image
-          }
-          log('Selected image path: ${image.path}');
-        });
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
   }
 }

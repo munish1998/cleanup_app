@@ -1,6 +1,9 @@
 import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
 import 'package:cleanup_mobile/MyTaskScreen/myTask.dart';
+import 'package:cleanup_mobile/MyTaskScreen/newTask.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen1.dart';
+import 'package:cleanup_mobile/NewTaskScreen/completetaskScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/newtasksScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/pendingTask.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
@@ -10,7 +13,6 @@ import 'package:cleanup_mobile/Utils/Drawer.dart';
 import 'package:cleanup_mobile/Utils/Setting_Drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// Import your TaskProvider here
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,10 +30,20 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Fetch tasks when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-      taskProvider.getMyTaskList(context: context);
-      taskProvider.fetchIncomingTasks('pending'); // Adjust status as needed
+      _fetchTasks();
     });
+  }
+
+  Future<void> _fetchTasks() async {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+    await taskProvider.getMyTaskList(context: context);
+    await taskProvider.fetchIncomingTasks('new');
+    await taskProvider.fetchPendingTasks('pending'); // Adjust status as needed
+  }
+
+  Future<void> _onRefresh() async {
+    // Call the method to fetch tasks
+    await _fetchTasks();
   }
 
   @override
@@ -69,98 +81,100 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       endDrawer: const SettingDrawer(),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tasks',
-              style: TextStyle(
-                color: AppColor.mytaskColor,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tasks',
+                style: TextStyle(
+                  color: AppColor.mytaskColor,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildTaskCard(
-                    context,
-                    title: 'My Task',
-                    image: 'assets/images/image8.png',
-                    onTap: () => Navigator.push(
+              const SizedBox(height: 15),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildTaskCard(
                       context,
-                      MaterialPageRoute(builder: (context) => MyTaskList()),
+                      title: 'My Task',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.mytasklist.length}',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MyTaskList()),
+                      ),
                     ),
-                  ),
-                  _buildTaskCard(
-                    context,
-                    title: 'Pending Task',
-                    image: 'assets/images/image8.png',
-                    trailing: '${taskProvider.comingTask.length}',
-                    trailingColor: Colors.purple,
-                    onTap: () => Navigator.push(
+                    _buildTaskCard(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => PendingTaskkScreen(
-                                taskid: '',
-                              )),
+                      title: 'Pending Task',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.pendingTask.length}',
+                      trailingColor: Colors.purple,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PendingTaskkScreen()),
+                      ),
                     ),
-                  ),
-                  _buildTaskCard(
-                    context,
-                    title: 'New Task',
-                    image: 'assets/images/image8.png',
-                    trailing: '${taskProvider.comingTask.length}',
-                    trailingColor: Colors.purple,
-                    onTap: () => Navigator.push(
+                    _buildTaskCard(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => UpcomingTaskScreen(
-                                taskId: taskProvider.mytasklist.first.id,
-                              )),
+                      title: 'New Task',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.comingTask.length}',
+                      trailingColor: Colors.purple,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => UpcomingTaskScreen(
+                                  taskId: taskProvider.mytasklist.first.id,
+                                )),
+                      ),
                     ),
-                  ),
-                  _buildTaskCard(
-                    context,
-                    title: 'Pending request',
-                    image: 'assets/images/image8.png',
-                    trailing: '${taskProvider.pending.length}',
-                    trailingColor: Colors.orange,
-                    onTap: () => Navigator.push(
+                    _buildTaskCard(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => const PendingListScreen()),
+                      title: 'Pending request',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.pending.length}',
+                      trailingColor: Colors.orange,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PendingListScreen()),
+                      ),
                     ),
-                  ),
-                  _buildTaskCard(
-                    context,
-                    title: 'Complete Task',
-                    image: 'assets/images/image8.png',
-                    trailing: '${taskProvider.mytasklist.length}',
-                    trailingColor: Colors.purple,
-                    onTap: () => Navigator.push(
+                    _buildTaskCard(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => UpcomingTaskScreen(
-                                taskId: taskProvider.mytasklist.first.id,
-                              )),
+                      title: 'Complete Task',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.mycompletes.length}',
+                      trailingColor: Colors.purple,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CompleteTaskScreen(
+                                  taskId: taskProvider.mytasklist.first.id,
+                                )),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 17),
-                  const Divider(
-                    color: AppColor.dividerColor,
-                    thickness: 0.5,
-                    height: 0.7,
-                  ),
-                  const SizedBox(height: 17),
-                  _buildLeaderboardSection(),
-                ],
+                    const SizedBox(height: 17),
+                    const Divider(
+                      color: AppColor.dividerColor,
+                      thickness: 0.5,
+                      height: 0.7,
+                    ),
+                    const SizedBox(height: 17),
+                    _buildLeaderboardSection(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(

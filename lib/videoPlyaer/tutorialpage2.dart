@@ -1,3 +1,4 @@
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
 import 'package:cleanup_mobile/videoPlyaer/tutorialpage1.dart';
 import 'package:cleanup_mobile/videoPlyaer/tutorialpage2.dart';

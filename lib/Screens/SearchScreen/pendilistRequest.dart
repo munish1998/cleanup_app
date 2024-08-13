@@ -1,5 +1,5 @@
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
-import 'package:cleanup_mobile/Utils/commonMethod.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
@@ -35,10 +35,10 @@ class _PendingListScreenState extends State<PendingListScreen> {
       await Provider.of<TaskProviders>(context, listen: false)
           .acceptFriendRequest(context: context, requestId: requestId);
       // Navigate to ShareTaskScreen upon success
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ShareTask()),
-      );
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => ShareTask()),
+      // );
     } catch (e) {
       // Handle any errors that occur during acceptance
       print('Error accepting friend request: $e');
@@ -61,6 +61,7 @@ class _PendingListScreenState extends State<PendingListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: AppColor.rank1Color,
         title: const Text('Pending Requests'),
       ),
       body: Consumer<TaskProviders>(
@@ -79,28 +80,68 @@ class _PendingListScreenState extends State<PendingListScreen> {
               final request = pendingRequests[index];
               final int requestId = request.id ?? 0; // Default value if null
 
-              return ListTile(
-                title: Text(request.sender?.name ?? 'Unknown'),
-                subtitle: Text('Request ID: $requestId'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(
-                      onPressed: () => _acceptRequest(requestId),
-                      child: Text(
-                        'Accept',
-                        style: TextStyle(color: Colors.green),
+              return Card(
+                elevation: 5,
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  title: Text(request.sender?.name ?? 'Unknown'),
+                  subtitle: Text(request.sender?.email ?? 'No email'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          _acceptRequest(requestId);
+                        },
+                        child: Container(
+                          height: 34,
+                          width: 90,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: AppColor.rank1Color,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Accept',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: AppColor.backgroundcontainerColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8), // Add spacing between buttons
-                    TextButton(
-                      onPressed: () => _declineRequest(requestId),
-                      child: Text(
-                        'Decline',
-                        style: TextStyle(color: Colors.red),
+                      SizedBox(width: 8), // Add spacing between buttons
+                      GestureDetector(
+                        onTap: () {
+                          _declineRequest(requestId);
+                        },
+                        child: Container(
+                          height: 34,
+                          width: 90,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: AppColor.rank1Color,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Decline',
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: AppColor.backgroundcontainerColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

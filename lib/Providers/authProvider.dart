@@ -1,10 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:cleanup_mobile/Models/userDetails.dart';
+import 'package:cleanup_mobile/Models/userModel.dart';
 import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:cleanup_mobile/apiServices/apiServices.dart';
+import 'package:firebase_auth/firebase_auth.dart ' as fa;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +18,13 @@ import '../utils/customLoader.dart';
 import '/utils/commonMethod.dart';
 
 class AuthProvider with ChangeNotifier {
+  Userdetails? userDetail;
+  final fa.FirebaseAuth _auth = fa.FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+  List<Userdetails> _pending = [];
+  List<Userdetails> get pending => _pending;
   String _address = '';
-
+  bool isloading = false;
   String get address => _address;
   bool _isAgree = false;
 
@@ -122,6 +131,98 @@ class AuthProvider with ChangeNotifier {
     nCPassController.clear();
   }
 
+  Future<fa.User?> handleSignIn({required BuildContext context}) async {
+    try {
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final fa.AuthCredential credential = fa.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final fa.UserCredential authResult =
+            await _auth.signInWithCredential(credential);
+        final fa.User? user = authResult.user;
+        socialLogin(
+            context: context,
+            email: 'munishrai.mr1998@gmail.com',
+            username: 'yy6734',
+            name: 'anujj',
+            mobileNumber: '12288156789',
+            password: '12345678',
+            social_signup: 'gmail',
+            is_admin: '0',
+            confirmPassword: '12345678');
+        // Navigator.of(context).pushAndRemoveUntil(
+        //   MaterialPageRoute(
+        //     builder: (context) => const CompanyInfoScreen(),
+        //   ),
+        //   (route) => false,
+        // );
+        return user;
+      }
+    } catch (error) {
+      log("Error signing in: $error");
+    }
+
+    return null;
+  }
+
+  Future<void> socialLogin({
+    required BuildContext context,
+    required String email,
+    required String username,
+    required String name,
+    required String mobileNumber,
+    required String password,
+    required String confirmPassword,
+    required String is_admin,
+    required String social_signup,
+  }) async {
+    isloading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiClient().socialSignup(
+        username: username,
+        name: name,
+        is_admin: '0',
+        terms: '1',
+        social_signup: 'gmail',
+        email: email,
+        mobileNumber: mobileNumber,
+        password: password,
+        confirmPassword: confirmPassword,
+      );
+
+      if (response['success'] == true) {
+        // Handle successful signup
+        //  userDetail = Userdetails.fromJson(response);
+        // Optionally save token in shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('access_token', response['access_token']);
+        prefs.setString('token_type', response['token_type']);
+
+        // Navigate to the next screen or update state
+        // Navigator.of(context).pushReplacementNamed('/next_screen');
+      } else {
+        // Handle failed signup
+        log("Signup failed: ${response['message']}");
+        // Optionally show an error message to the user
+        // customToast(context: context, msg: response['message'], type: 0);
+      }
+    } catch (error) {
+      log("Error during social login: $error");
+      // Optionally handle exception, e.g., show an error message
+      // customToast(context: context, msg: 'An unexpected error occurred.', type: 0);
+    } finally {
+      isloading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> Logout(BuildContext context) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.clear();
@@ -178,66 +279,51 @@ class AuthProvider with ChangeNotifier {
 
     try {
       // Make the POST request
-      final response =
-          await ApiClient().postData(context: context, url: url, body: data);
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          // Add other headers if needed
+        },
+        body: jsonEncode(data),
+      );
 
-      // Log the raw response body
       log('Response body: ${response.body}');
 
-      // Handle non-200 status codes
       if (response.statusCode != 200) {
-        // Attempt to decode error response
-        var errorResult = {};
-        try {
-          errorResult = jsonDecode(response.body);
-        } catch (e) {
-          log('Error decoding response body: $e');
-          customToast(
-              context: context, msg: 'An unexpected error occurred', type: 0);
-          return;
-        }
-        customToast(
-            context: context,
-            msg: errorResult['message'] ?? 'Unknown error',
-            type: 0);
-        _isOTP = false;
-        notifyListeners();
+        // Handle non-200 status codes
+        customToast(context: context, msg: 'Failed to register', type: 0);
         return;
       }
 
-      // Attempt to decode JSON response
-      var result = {};
-      try {
-        result = jsonDecode(response.body);
-      } catch (e) {
-        log('Error decoding JSON response: $e');
-        customToast(context: context, msg: 'Invalid response format', type: 0);
-        _isOTP = false;
-        notifyListeners();
-        return;
-      }
+      // Decode the JSON response
+      var result = jsonDecode(response.body);
 
       log('SignUp result: $result');
 
-      // Handle response based on 'code'
-      if (result['code'] == 200) {
-        _uId = result['id'];
-        _isOTP = true;
-        notifyListeners();
+      if (result['success'] == true) {
+        // Registration successful
+        String accessToken = result['access_token'];
+        String tokenType = result['token_type'];
+
+        // You can save the token and type if needed
+        // For example, using SharedPreferences
+        // SharedPreferences prefs = await SharedPreferences.getInstance();
+        // await prefs.setString('access_token', accessToken);
+        // await prefs.setString('token_type', tokenType);
+
+        // Navigate to login and remove all previous routes
       } else {
-        customToast(context: context, msg: result['message'], type: 0);
-        _isOTP = false;
-        notifyListeners();
+        customToast(
+            context: context,
+            msg: result['message'] ?? 'Unknown error',
+            type: 0);
       }
     } catch (e) {
-      // Handle any other errors (network issues, etc.)
       log('SignUp Error: $e');
       customToast(context: context, msg: 'SignUp Error: $e', type: 0);
-      _isOTP = false;
-      notifyListeners();
     } finally {
-      // Close the loader dialog
-      navPop(context: context);
+      navPop(context: context); // Close the loader dialog
     }
   }
 

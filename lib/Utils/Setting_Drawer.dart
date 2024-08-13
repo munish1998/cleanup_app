@@ -107,13 +107,12 @@ class SettingDrawer extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
+                // Navigator.of(context).pop(); // Close the dialog
 
-                // Perform logout operation
-                // await authProvider.logout(context);
-                // customToast(
-                //     context: context, msg: 'Logout successfully', type: 0);
-                navPush(context: context, action: LoginScreen());
+                await authProvider.logout(context);
+                customToast(
+                    context: context, msg: 'Logout successfully', type: 0);
+                navPushRemove(context: context, action: LoginScreen());
                 // Ensure that the widget is still mounted
 
                 // Show a Snackbar to indicate successful logout
@@ -126,7 +125,7 @@ class SettingDrawer extends StatelessWidget {
                 // );
 
                 // Optionally, navigate to a different screen (e.g., login screen)
-                Navigator.pushReplacementNamed(context, '/login');
+                // Navigator.pushReplacementNamed(context, '/login');
               },
               child: const Text('Yes'),
             ),

@@ -1,9 +1,12 @@
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/Auth_Screen/SignUp.dart';
 import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/LeaderboardScreen/LeaderScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/ProfileScreen/ProfileScreen.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/SearchScreen.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -75,6 +78,7 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
             InkWell(
               onTap: () {
+                navPush(context: context, action: SearchScreen());
                 // Navigator.push(
                 //     context,
                 //     MaterialPageRoute(
@@ -92,7 +96,7 @@ class _AppDrawerState extends State<AppDrawer> {
               },
               child: _listContent(
                 icon: Icons.add,
-                name: "Add Tak",
+                name: "Create Task",
               ),
             ),
             InkWell(
@@ -117,16 +121,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 name: "Profile",
               ),
             ),
-            InkWell(
-              onTap: () {
-                // Navigator.push(context,
-                //     MaterialPageRoute(builder: (context) => ProfileScreen()));
-              },
-              child: _listContent(
-                icon: Icons.person,
-                name: "Contacts",
-              ),
-            ),
+
             // InkWell(
             //   onTap: () {
             //     _exitApp(context);

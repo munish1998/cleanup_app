@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MyTask {
+class MyTaskfreind {
   final int id;
   final int userId;
   final String location;
@@ -22,7 +22,7 @@ class MyTask {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  MyTask({
+  MyTaskfreind({
     required this.id,
     required this.userId,
     required this.location,
@@ -37,8 +37,8 @@ class MyTask {
   });
 
   // Factory constructor to create an instance from JSON data
-  factory MyTask.fromJson(Map<String, dynamic> json) {
-    return MyTask(
+  factory MyTaskfreind.fromJson(Map<String, dynamic> json) {
+    return MyTaskfreind(
       id: json['id'],
       userId: json['user_id'],
       location: json['location'],
@@ -56,7 +56,7 @@ class MyTask {
 
 class FriendListScreen extends StatefulWidget {
   String? taskid;
-  MyTask? _taskk;
+  MyTaskfreind? _taskk;
   FriendListScreen({Key? key, required this.taskid}) : super(key: key);
 
   @override
@@ -81,7 +81,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColor.rank1Color,
-        title: Text('My Friends List (${selectedFriends.length})'),
+        title: Text('My Friends List'),
       ),
       body: Consumer<TaskProviders>(
         builder: (context, taskProvider, child) {
@@ -123,49 +123,49 @@ class _FriendListScreenState extends State<FriendListScreen> {
                                   const Color.fromRGBO(33, 150, 243, 1),
                               foregroundColor: Colors.black,
                             )
-                          : Text('3'),
+                          : null,
                       onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            selectedFriends.remove(friend.id);
-                          } else {
-                            if (selectedFriends.length < 3) {
-                              selectedFriends.add(friend.id.toString());
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'You can only select up to 3 friends')),
-                              );
-                            }
-                          }
-                        });
+                        // setState(() {
+                        //   if (isSelected) {
+                        //     selectedFriends.remove(friend.id);
+                        //   } else {
+                        //     if (selectedFriends.length < 3) {
+                        //       selectedFriends.add(friend.id.toString());
+                        //     } else {
+                        //       ScaffoldMessenger.of(context).showSnackBar(
+                        //         SnackBar(
+                        //             content: Text(
+                        //                 'You can only select up to 3 friends')),
+                        //       );
+                        //     }
+                        //   }
+                        // });
                       },
                     );
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: InkWell(
-                  onTap: _shareSelectedFriends,
-                  child: Container(
-                    height: 54,
-                    width: 370,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: AppColor.rank1Color),
-                    child: const Center(
-                        child: Text(
-                      'Send Task',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: AppColor.backgroundcontainerColor,
-                          fontWeight: FontWeight.bold),
-                    )),
-                  ),
-                ),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: InkWell(
+              //     onTap: _shareSelectedFriends,
+              //     child: Container(
+              //       height: 54,
+              //       width: 370,
+              //       decoration: BoxDecoration(
+              //           borderRadius: BorderRadius.circular(20),
+              //           color: AppColor.rank1Color),
+              //       child: const Center(
+              //           child: Text(
+              //         'Send Task',
+              //         style: TextStyle(
+              //             fontSize: 20,
+              //             color: AppColor.backgroundcontainerColor,
+              //             fontWeight: FontWeight.bold),
+              //       )),
+              //     ),
+              //   ),
+              // ),
             ],
           );
         },

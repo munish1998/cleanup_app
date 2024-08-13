@@ -35,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<AuthProvider>(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromARGB(255, 248, 253, 255),
@@ -64,7 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/images/image6.png'),
+                      InkWell(
+                          onTap: () async {
+                            await taskProvider.handleSignIn(context: context);
+                          },
+                          child: Image.asset('assets/images/image6.png')),
                       const SizedBox(
                         width: 22,
                       ),
@@ -483,128 +488,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // void onVerify(BuildContext context, String email) async {
-  //   var authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-  //   // Collect OTP by combining the text from all controllers
-  //   String otp = _otpControllers.map((controller) => controller.text).join();
-
-  //   if (otp.length != 4) {
-  //     customToast(context: context, msg: 'Please enter all 4 digits', type: 0);
-  //     return;
-  //   }
-
-  //   var data = {
-  //     'email': email,
-  //     'otp': otp,
-  //   };
-
-  //   try {
-  //     // Call the verifyOTP function and get the reset token
-  //     String? resetToken =
-  //         await authProvider.verifyOTP(context: context, data: data);
-  //     log('Reset token received: $resetToken');
-
-  //     if (resetToken != null) {
-  //       // Proceed with UI update
-  //       showModalBottomSheet(
-  //         context: context,
-  //         isScrollControlled: true, // Allow the bottom sheet to resize
-  //         builder: (BuildContext context) {
-  //           final mediaQuery = MediaQuery.of(context);
-  //           return Consumer<AuthProvider>(
-  //             builder: (context, authProvider, child) {
-  //               return SingleChildScrollView(
-  //                 child: Container(
-  //                   color: Colors.white,
-  //                   padding: EdgeInsets.only(
-  //                       bottom:
-  //                           mediaQuery.viewInsets.bottom, // Adjust for keyboard
-  //                       left: 20,
-  //                       right: 20,
-  //                       top: 20),
-  //                   child: Column(
-  //                     mainAxisSize: MainAxisSize
-  //                         .min, // Allow the bottom sheet to be as small as needed
-  //                     children: [
-  //                       const Text(
-  //                         'Change Password',
-  //                         style: TextStyle(
-  //                           color: Colors.black,
-  //                           fontSize: 20,
-  //                         ),
-  //                       ),
-  //                       const SizedBox(height: 30),
-  //                       textfields(
-  //                         context: context,
-  //                         controller: authProvider.passController,
-  //                         hint: 'Password',
-  //                         icon: Icons.lock,
-  //                         showSuffixIcon: true,
-  //                         onSuffixIconPressed: () {
-  //                           setState(() {
-  //                             isPass = !isPass;
-  //                           });
-  //                         },
-  //                         ispas: isPass,
-  //                         hintTextColor: Colors.grey,
-  //                         index: 5,
-  //                       ),
-  //                       const SizedBox(height: 10),
-  //                       textfields(
-  //                         context: context,
-  //                         controller: authProvider.cPassController,
-  //                         hint: 'Confirm password',
-  //                         icon: Icons.lock,
-  //                         showSuffixIcon: true,
-  //                         onSuffixIconPressed: () {
-  //                           setState(() {
-  //                             isCPass = !isCPass;
-  //                           });
-  //                         },
-  //                         ispas: isCPass,
-  //                         hintTextColor: Colors.grey,
-  //                         index: 6,
-  //                       ),
-  //                       const SizedBox(height: 10),
-  //                       InkWell(
-  //                         onTap: () =>
-  //                             onForgetpassword(), // Pass the reset token here
-  //                         child: Container(
-  //                           color: Colors.white,
-  //                           height: 54,
-  //                           width: double.infinity,
-  //                           decoration: BoxDecoration(
-  //                             borderRadius: BorderRadius.circular(20),
-  //                             color: AppColor.rank1Color,
-  //                           ),
-  //                           child: const Center(
-  //                             child: Text(
-  //                               'Reset Password',
-  //                               style: TextStyle(
-  //                                 fontSize: 20,
-  //                                 color: AppColor.backgroundcontainerColor,
-  //                                 fontWeight: FontWeight.bold,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                       const SizedBox(height: 10),
-  //                     ],
-  //                   ),
-  //                 ),
-  //               );
-  //             },
-  //           );
-  //         },
-  //       );
-  //     }
-  //   } catch (e) {
-  //     customToast(context: context, msg: 'Error verifying OTP.', type: 0);
-  //     debugPrint('Error: $e');
-  //   }
-  // }
   void onVerify(BuildContext context, String email) async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
 

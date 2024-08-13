@@ -33,7 +33,7 @@ class ApiServices {
   static String acceptTask(String shareId) =>
       '$baseUrl/api/auth/task/accept/$shareId';
   // static const String acceptTask = '${baseUrl}/api/auth/task/accept/$shareId';
-  static const String termsCondition = '${baseUrl}user/terms';
+  static const String socialLogin = '${baseUrl}/api/auth/social-login';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String levels = '${baseUrl}user/levels';
   static const String exercises = '${baseUrl}user/exercises';
