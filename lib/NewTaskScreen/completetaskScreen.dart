@@ -228,9 +228,9 @@ class _CompleteTaskScreenState extends State<CompleteTaskScreen> {
                   trailing: ElevatedButton(
                     onPressed: () {
                       _fetchTaskDetails();
-                      navPush(
-                          context: context,
-                          action: DetailTaskScreen(taskId: widget.taskId));
+                      // navPush(
+                      //     context: context,
+                      //     action: DetailTaskScreen(taskId: widget.taskId));
                       // _acceptTaskAndNavigate(taskProvider.comingTask.first.sharerId.toString()
                       // ); // Ensure task.id is the correct type
                     },

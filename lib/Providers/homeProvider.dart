@@ -26,8 +26,9 @@ import 'package:http/http.dart' as http;
 
 class TaskProviders with ChangeNotifier {
   bool _isLoading = false; // Add this field
-
-  bool get isLoading => _isLoading; // Getter for the loading state
+  bool isloading = false;
+  bool get isLoading => _isLoading;
+  // MyTaskModel? myTaskModel; // Getter for the loading state
   List<MyTask> _mytasklist = [];
   List<MyTask> get mytasklist => _mytasklist;
   List<MyTaskModel> _mytask = [];
@@ -63,8 +64,60 @@ class TaskProviders with ChangeNotifier {
   TextEditingController get cityController => _cityController;
   TextEditingController get areaController => _areaController;
   bool _isExercise = false;
+  MyTaskModel? _myTaskModel;
 
+  MyTaskModel? get myTaskModel => _myTaskModel;
   bool get isExercise => _isExercise;
+
+  Future<void> fetchTasks({required BuildContext context}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final url = Uri.parse(ApiServices.getmytaskList);
+
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    }; // Replace with your API URL
+    // try {
+    //   final response = await http.get(Uri.parse(url,headers: headers));
+    //   if (response.statusCode == 200) {
+    //     final jsonResponse = json.decode(response.body);
+    //     _myTaskModel = MyTaskModel.fromJson(jsonResponse);
+    //     log('fetch task response ====>>>>$_myTaskModel');
+    //     notifyListeners();
+    //   } else {
+    //     throw Exception('Failed to load tasks');
+    //   }
+    // } catch (error) {
+    //   print(error); // Handle errors appropriately
+    // }
+    try {
+      final response = await http.get(url, headers: headers);
+
+      //log('Response status: ${response.statusCode}');
+      log('my task response : ${response.body}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> result = jsonDecode(response.body);
+        _myTaskModel = MyTaskModel.fromJson(result);
+        log('fetch task response ====>>>>$_myTaskModel');
+      } else {
+        // _mytasklist = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      //  _mytasklist = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> getMyTaskList({required BuildContext context}) async {
     _isLoading = true;

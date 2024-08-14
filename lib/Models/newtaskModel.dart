@@ -9,13 +9,13 @@ class MyTaskModel {
     if (json['tasks'] != null) {
       tasks = <Tasks>[];
       json['tasks'].forEach((v) {
-        tasks!.add(new Tasks.fromJson(v));
+        tasks!.add(Tasks.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = {};
     data['success'] = this.success;
     if (this.tasks != null) {
       data['tasks'] = this.tasks!.map((v) => v.toJson()).toList();
@@ -39,20 +39,21 @@ class Tasks {
   String? updatedAt;
   User? user;
 
-  Tasks(
-      {this.id,
-      this.userId,
-      this.shareTaskId,
-      this.location,
-      this.title,
-      this.description,
-      this.before,
-      this.after,
-      this.baseUrl,
-      this.status,
-      this.createdAt,
-      this.updatedAt,
-      this.user});
+  Tasks({
+    this.id,
+    this.userId,
+    this.shareTaskId,
+    this.location,
+    this.title,
+    this.description,
+    this.before,
+    this.after,
+    this.baseUrl,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+    this.user,
+  });
 
   Tasks.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -67,11 +68,11 @@ class Tasks {
     status = json['status'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+    user = json['user'] != null ? User.fromJson(json['user']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = {};
     data['id'] = this.id;
     data['user_id'] = this.userId;
     data['share_task_id'] = this.shareTaskId;
@@ -103,31 +104,28 @@ class User {
   String? baseUrl;
   String? location;
   int? terms;
-  Null? socialSignup;
   int? isAdmin;
   int? isActive;
-  Null? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
-  User(
-      {this.id,
-      this.username,
-      this.name,
-      this.email,
-      this.mobile,
-      this.dob,
-      this.image,
-      this.bgimage,
-      this.baseUrl,
-      this.location,
-      this.terms,
-      this.socialSignup,
-      this.isAdmin,
-      this.isActive,
-      this.emailVerifiedAt,
-      this.updatedAt,
-      this.createdAt});
+  User({
+    this.id,
+    this.username,
+    this.name,
+    this.email,
+    this.mobile,
+    this.dob,
+    this.image,
+    this.bgimage,
+    this.baseUrl,
+    this.location,
+    this.terms,
+    this.isAdmin,
+    this.isActive,
+    this.updatedAt,
+    this.createdAt,
+  });
 
   User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -141,16 +139,14 @@ class User {
     baseUrl = json['base_url'];
     location = json['location'];
     terms = json['terms'];
-    socialSignup = json['social_signup'];
     isAdmin = json['is_admin'];
     isActive = json['is_active'];
-    emailVerifiedAt = json['email_verified_at'];
     updatedAt = json['updated_at'];
     createdAt = json['created_at'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = {};
     data['id'] = this.id;
     data['username'] = this.username;
     data['name'] = this.name;
@@ -162,10 +158,8 @@ class User {
     data['base_url'] = this.baseUrl;
     data['location'] = this.location;
     data['terms'] = this.terms;
-    data['social_signup'] = this.socialSignup;
     data['is_admin'] = this.isAdmin;
     data['is_active'] = this.isActive;
-    data['email_verified_at'] = this.emailVerifiedAt;
     data['updated_at'] = this.updatedAt;
     data['created_at'] = this.createdAt;
     return data;

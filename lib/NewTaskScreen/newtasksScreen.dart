@@ -71,9 +71,10 @@ class _UpcomingTaskScreenState extends State<UpcomingTaskScreen> {
               final task = taskProvider.comingTask[index];
 
               final profileImageUrl = task.user?.id;
-              final imageProvider = (profileImageUrl != null)
+              final imageProvider = (profileImageUrl == null)
                   ? AssetImage('assets/images/image27.png') as ImageProvider
-                  : NetworkImage('$baseUrl$profileImageUrl') as ImageProvider;
+                  : NetworkImage('${task.sharer!.baseUrl}${task.sharer!.image}')
+                      as ImageProvider;
 
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),

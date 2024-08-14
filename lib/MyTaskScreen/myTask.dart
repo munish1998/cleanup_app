@@ -20,7 +20,7 @@ class _MyTaskListState extends State<MyTaskList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskProviders>(context, listen: false).getMyTaskList(
+      Provider.of<TaskProviders>(context, listen: false).fetchTasks(
         context: context,
         // Pass the necessary data for your API call
       );
@@ -69,6 +69,8 @@ class _MyTaskListState extends State<MyTaskList> {
               itemCount: taskProvider.mytasklist.length,
               itemBuilder: (context, index) {
                 final task = taskProvider.mytasklist[index];
+                final profileImageUrl = task.after;
+
                 return InkWell(
                   onTap: () {
                     // Navigate to the detail screen when the card is tapped
@@ -88,8 +90,8 @@ class _MyTaskListState extends State<MyTaskList> {
                     child: ListTile(
                       contentPadding: EdgeInsets.all(12),
                       leading: CircleAvatar(
-                        backgroundImage: NetworkImage('${task.before}'),
-                        radius: 30,
+                        child: Image.network('${task.baseUrl}${task.after}'),
+                        // radius: 100,
                       ),
                       title: Text(
                         '${task.title}',

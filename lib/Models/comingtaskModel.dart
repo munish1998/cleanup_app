@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ComingTaskModel {
   int? id;
   int? sharerId;
@@ -10,57 +8,51 @@ class ComingTaskModel {
   String? updatedAt;
   User? user;
   Task? task;
-  User? sharer;
+  Sharer? sharer;
 
-  ComingTaskModel({
-    this.id,
-    this.sharerId,
-    this.userId,
-    this.taskId,
-    this.status,
-    this.createdAt,
-    this.updatedAt,
-    this.user,
-    this.task,
-    this.sharer,
-  });
+  ComingTaskModel(
+      {this.id,
+      this.sharerId,
+      this.userId,
+      this.taskId,
+      this.status,
+      this.createdAt,
+      this.updatedAt,
+      this.user,
+      this.task,
+      this.sharer});
 
   ComingTaskModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'] as int?;
-    sharerId = json['sharer_id'] as int?;
-    userId = json['user_id'] as int?;
-    taskId = json['task_id'] as int?;
-    status = json['status'] as String?;
-    createdAt = json['created_at'] as String?;
-    updatedAt = json['updated_at'] as String?;
-    user = json['user'] != null
-        ? User.fromJson(json['user'] as Map<String, dynamic>)
-        : null;
-    task = json['task'] != null
-        ? Task.fromJson(json['task'] as Map<String, dynamic>)
-        : null;
-    sharer = json['sharer'] != null
-        ? User.fromJson(json['sharer'] as Map<String, dynamic>)
-        : null;
+    id = json['id'];
+    sharerId = json['sharer_id'];
+    userId = json['user_id'];
+    taskId = json['task_id'];
+    status = json['status'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
+    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+    task = json['task'] != null ? new Task.fromJson(json['task']) : null;
+    sharer =
+        json['sharer'] != null ? new Sharer.fromJson(json['sharer']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['sharer_id'] = sharerId;
-    data['user_id'] = userId;
-    data['task_id'] = taskId;
-    data['status'] = status;
-    data['created_at'] = createdAt;
-    data['updated_at'] = updatedAt;
-    if (user != null) {
-      data['user'] = user!.toJson();
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['sharer_id'] = this.sharerId;
+    data['user_id'] = this.userId;
+    data['task_id'] = this.taskId;
+    data['status'] = this.status;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
+    if (this.user != null) {
+      data['user'] = this.user!.toJson();
     }
-    if (task != null) {
-      data['task'] = task!.toJson();
+    if (this.task != null) {
+      data['task'] = this.task!.toJson();
     }
-    if (sharer != null) {
-      data['sharer'] = sharer!.toJson();
+    if (this.sharer != null) {
+      data['sharer'] = this.sharer!.toJson();
     }
     return data;
   }
@@ -72,55 +64,77 @@ class User {
   String? name;
   String? email;
   String? mobile;
-
+  Null? dob;
+  String? image;
+  Null? bgimage;
+  String? baseUrl;
   String? location;
   int? terms;
+  Null? socialSignup;
   int? isAdmin;
   int? isActive;
+  Null? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
-  User({
-    this.id,
-    this.username,
-    this.name,
-    this.email,
-    this.mobile,
-    this.location,
-    this.terms,
-    this.isAdmin,
-    this.isActive,
-    this.updatedAt,
-    this.createdAt,
-  });
+  User(
+      {this.id,
+      this.username,
+      this.name,
+      this.email,
+      this.mobile,
+      this.dob,
+      this.image,
+      this.bgimage,
+      this.baseUrl,
+      this.location,
+      this.terms,
+      this.socialSignup,
+      this.isAdmin,
+      this.isActive,
+      this.emailVerifiedAt,
+      this.updatedAt,
+      this.createdAt});
 
   User.fromJson(Map<String, dynamic> json) {
-    id = json['id'] as int?;
-    username = json['username'] as String?;
-    name = json['name'] as String?;
-    email = json['email'] as String?;
-    mobile = json['mobile'] as String?;
-    location = json['location'] as String?;
-    terms = json['terms'] as int?;
-    isAdmin = json['is_admin'] as int?;
-    isActive = json['is_active'] as int?;
-    updatedAt = json['updated_at'] as String?;
-    createdAt = json['created_at'] as String?;
+    id = json['id'];
+    username = json['username'];
+    name = json['name'];
+    email = json['email'];
+    mobile = json['mobile'];
+    dob = json['dob'];
+    image = json['image'];
+    bgimage = json['bgimage'];
+    baseUrl = json['base_url'];
+    location = json['location'];
+    terms = json['terms'];
+    socialSignup = json['social_signup'];
+    isAdmin = json['is_admin'];
+    isActive = json['is_active'];
+    emailVerifiedAt = json['email_verified_at'];
+    updatedAt = json['updated_at'];
+    createdAt = json['created_at'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['username'] = username;
-    data['name'] = name;
-    data['email'] = email;
-    data['mobile'] = mobile;
-    data['location'] = location;
-    data['terms'] = terms;
-    data['is_admin'] = isAdmin;
-    data['is_active'] = isActive;
-    data['updated_at'] = updatedAt;
-    data['created_at'] = createdAt;
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['username'] = this.username;
+    data['name'] = this.name;
+    data['email'] = this.email;
+    data['mobile'] = this.mobile;
+    data['dob'] = this.dob;
+    data['image'] = this.image;
+    data['bgimage'] = this.bgimage;
+    data['base_url'] = this.baseUrl;
+    data['location'] = this.location;
+    data['terms'] = this.terms;
+    data['social_signup'] = this.socialSignup;
+    data['is_admin'] = this.isAdmin;
+    data['is_active'] = this.isActive;
+    data['email_verified_at'] = this.emailVerifiedAt;
+    data['updated_at'] = this.updatedAt;
+    data['created_at'] = this.createdAt;
     return data;
   }
 }
@@ -139,50 +153,130 @@ class Task {
   String? createdAt;
   String? updatedAt;
 
-  Task({
-    this.id,
-    this.userId,
-    this.shareTaskId,
-    this.location,
-    this.title,
-    this.description,
-    this.before,
-    this.after,
-    this.baseUrl,
-    this.status,
-    this.createdAt,
-    this.updatedAt,
-  });
+  Task(
+      {this.id,
+      this.userId,
+      this.shareTaskId,
+      this.location,
+      this.title,
+      this.description,
+      this.before,
+      this.after,
+      this.baseUrl,
+      this.status,
+      this.createdAt,
+      this.updatedAt});
 
   Task.fromJson(Map<String, dynamic> json) {
-    id = json['id'] as int?;
-    userId = json['user_id'] as int?;
-    shareTaskId = json['share_task_id'] as int?;
-    location = json['location'] as String?;
-    title = json['title'] as String?;
-    description = json['description'] as String?;
-    before = json['before'] as String?;
-    after = json['after'] as String?;
-    baseUrl = json['base_url'] as String?;
-    status = json['status'] as String?;
-    createdAt = json['created_at'] as String?;
-    updatedAt = json['updated_at'] as String?;
+    id = json['id'];
+    userId = json['user_id'];
+    shareTaskId = json['share_task_id'];
+    location = json['location'];
+    title = json['title'];
+    description = json['description'];
+    before = json['before'];
+    after = json['after'];
+    baseUrl = json['base_url'];
+    status = json['status'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['user_id'] = userId;
-    data['share_task_id'] = shareTaskId;
-    data['location'] = location;
-    data['title'] = title;
-    data['description'] = description;
-    data['before'] = before;
-    data['after'] = after;
-    data['base_url'] = baseUrl;
-    data['status'] = status;
-    data['created_at'] = createdAt;
-    data['updated_at'] = updatedAt;
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['user_id'] = this.userId;
+    data['share_task_id'] = this.shareTaskId;
+    data['location'] = this.location;
+    data['title'] = this.title;
+    data['description'] = this.description;
+    data['before'] = this.before;
+    data['after'] = this.after;
+    data['base_url'] = this.baseUrl;
+    data['status'] = this.status;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
+    return data;
+  }
+}
+
+class Sharer {
+  int? id;
+  String? username;
+  String? name;
+  String? email;
+  String? mobile;
+  Null? dob;
+  String? image;
+  String? bgimage;
+  String? baseUrl;
+  String? location;
+  int? terms;
+  Null? socialSignup;
+  int? isAdmin;
+  int? isActive;
+  Null? emailVerifiedAt;
+  String? updatedAt;
+  String? createdAt;
+
+  Sharer(
+      {this.id,
+      this.username,
+      this.name,
+      this.email,
+      this.mobile,
+      this.dob,
+      this.image,
+      this.bgimage,
+      this.baseUrl,
+      this.location,
+      this.terms,
+      this.socialSignup,
+      this.isAdmin,
+      this.isActive,
+      this.emailVerifiedAt,
+      this.updatedAt,
+      this.createdAt});
+
+  Sharer.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    username = json['username'];
+    name = json['name'];
+    email = json['email'];
+    mobile = json['mobile'];
+    dob = json['dob'];
+    image = json['image'];
+    bgimage = json['bgimage'];
+    baseUrl = json['base_url'];
+    location = json['location'];
+    terms = json['terms'];
+    socialSignup = json['social_signup'];
+    isAdmin = json['is_admin'];
+    isActive = json['is_active'];
+    emailVerifiedAt = json['email_verified_at'];
+    updatedAt = json['updated_at'];
+    createdAt = json['created_at'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['username'] = this.username;
+    data['name'] = this.name;
+    data['email'] = this.email;
+    data['mobile'] = this.mobile;
+    data['dob'] = this.dob;
+    data['image'] = this.image;
+    data['bgimage'] = this.bgimage;
+    data['base_url'] = this.baseUrl;
+    data['location'] = this.location;
+    data['terms'] = this.terms;
+    data['social_signup'] = this.socialSignup;
+    data['is_admin'] = this.isAdmin;
+    data['is_active'] = this.isActive;
+    data['email_verified_at'] = this.emailVerifiedAt;
+    data['updated_at'] = this.updatedAt;
+    data['created_at'] = this.createdAt;
     return data;
   }
 }

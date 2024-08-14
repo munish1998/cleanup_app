@@ -233,11 +233,11 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
               content: _task!.description,
             ),
             SizedBox(height: 16),
-            TextButton(
-                onPressed: () {
-                  _showShareOptionsBottomSheet(context);
-                },
-                child: Text('share task')),
+            // TextButton(
+            //     onPressed: () {
+            //       _showShareOptionsBottomSheet(context);
+            //     },
+            //     child: Text('share task')),
             SizedBox(height: 16),
             _buildImageCard(
               label: 'Before Image',

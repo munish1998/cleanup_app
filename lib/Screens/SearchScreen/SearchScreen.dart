@@ -134,7 +134,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         contentPadding: EdgeInsets.all(12.0),
                         leading: CircleAvatar(
                           backgroundImage: user.image != null
-                              ? NetworkImage(user.image!)
+                              ? NetworkImage('${user.baseUrl}${user.image}')
                               : AssetImage('assets/images/image27.png')
                                   as ImageProvider,
                           radius: 24,

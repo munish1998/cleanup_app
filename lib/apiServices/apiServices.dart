@@ -13,6 +13,27 @@ import '../utils/constant.dart';
 
 class ApiClient {
   ApiBaseHelper helper = ApiBaseHelper();
+
+  Future<dynamic> fetchtasklist({
+    required String accesstoken,
+  }) async {
+    final response = await helper.get(
+      ApiServices.getmytaskList,
+      {
+        "Accept": "application/json",
+        "Authorization": "Bearer $accesstoken",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // If the request is successful, parse the JSON response
+      return json.decode(response.body);
+    } else {
+      // If the request was not successful, throw an exception or handle accordingly
+      throw Exception('Failed to load driver list');
+    }
+  }
+
   Future<http.Response> getData(
       {required BuildContext context, required Uri uri}) async {
     try {

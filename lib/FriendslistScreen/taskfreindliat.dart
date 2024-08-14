@@ -1,17 +1,12 @@
-import 'dart:convert';
-import 'dart:math';
+import 'dart:developer';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
-import 'package:cleanup_mobile/Utils/Constant.dart';
-import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class FriendTaskScreen extends StatefulWidget {
-  String? taskid;
-  // MyTask? _taskk;
+  final String? taskid;
+
   FriendTaskScreen({Key? key, required this.taskid}) : super(key: key);
 
   @override
@@ -24,121 +19,38 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch the friends list when the screen is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskProviders>(context, listen: false)
           .getmyfreindsList(context: context);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColor.rank1Color,
-        title: Text('My Friends List (${selectedFriends.length})'),
-      ),
-      body: Consumer<TaskProviders>(
-        builder: (context, taskProvider, child) {
-          if (taskProvider.myfriends.isEmpty) {
-            return Center(child: Text('No friends found'));
-          }
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: taskProvider.myfriends.length,
-                  itemBuilder: (context, index) {
-                    final friend = taskProvider.myfriends[index];
-                    final isSelected = selectedFriends.contains(friend.id);
-
-                    // Determine the image URL or use default image
-                    final profileImageUrl =
-                        friend.id; // Example profile image URL
-                    final imageProvider = (profileImageUrl != null)
-                        ? NetworkImage(profileImageUrl.toString())
-                        : AssetImage('assets/images/image27.png')
-                            as ImageProvider;
-
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: imageProvider,
-                        backgroundColor: Colors.grey[300],
-                        child: (profileImageUrl == null)
-                            ? Icon(Icons.person, color: Colors.white)
-                            : null,
-                      ),
-                      title: Text(friend.name ?? 'Unknown'),
-                      subtitle: Text(friend.email ?? 'No email'),
-                      trailing: isSelected
-                          ? CircleAvatar(
-                              child: Text(
-                                  '${selectedFriends.indexOf(friend.id.toString()) + 1}'),
-                              backgroundColor:
-                                  const Color.fromRGBO(33, 150, 243, 1),
-                              foregroundColor: Colors.black,
-                            )
-                          : Text('3'),
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            selectedFriends.remove(friend.id);
-                          } else {
-                            if (selectedFriends.length < 3) {
-                              selectedFriends.add(friend.id.toString());
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'You can only select up to 3 friends')),
-                              );
-                            }
-                          }
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: InkWell(
-                  onTap: _shareSelectedFriends,
-                  child: Container(
-                    height: 54,
-                    width: 370,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: AppColor.rank1Color),
-                    child: const Center(
-                        child: Text(
-                      'Send Task',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: AppColor.backgroundcontainerColor,
-                          fontWeight: FontWeight.bold),
-                    )),
-                  ),
-                ),
-              ),
-            ],
+  void _toggleFriendSelection(String friendId) {
+    setState(() {
+      if (selectedFriends.contains(friendId)) {
+        selectedFriends.remove(friendId);
+      } else {
+        if (selectedFriends.length < 3) {
+          selectedFriends.add(friendId);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('You can select a maximum of 3 friends.')),
           );
-        },
-      ),
-    );
+        }
+      }
+    });
   }
 
   void _shareSelectedFriends() async {
     if (selectedFriends.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No friends selected to share')),
+        SnackBar(content: Text('At least one friend must be selected.')),
       );
       return;
     }
 
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
 
-    // Example: Displaying a loading indicator while sharing
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -157,29 +69,98 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
     );
 
     try {
-      // Call the shareTask method from TaskProviders
       await taskProvider.shareTask(
         selectedFriends,
         context: context,
-        taskId: widget.taskid.toString(),
-        // Use taskid from the widget
+        taskId: widget.taskid ?? '',
         friendIds: selectedFriends,
       );
 
-      // Dismiss the dialog after sharing is complete
       Navigator.of(context).pop(); // Close the dialog
 
-      // Optionally show a success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Task shared successfully!')),
       );
     } catch (error) {
-      // Handle errors
       Navigator.of(context).pop(); // Close the dialog
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to share task')),
       );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColor.rank1Color,
+        title: Text('My Friends List'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: _shareSelectedFriends,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Center(
+              child: Text(
+                '${selectedFriends.length} Selected',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Consumer<TaskProviders>(
+        builder: (context, taskProvider, child) {
+          if (taskProvider.myfriends.isEmpty) {
+            return Center(child: Text('No friends found'));
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: taskProvider.myfriends.length,
+                  itemBuilder: (context, index) {
+                    final friend = taskProvider.myfriends[index];
+                    final isSelected = selectedFriends.contains(friend.id);
+
+                    // Determine the image URL or use default image
+                    final profileImageUrl = friend.image;
+                    log('Image URL: $profileImageUrl');
+
+                    final imageProvider = profileImageUrl != null
+                        ? (profileImageUrl.startsWith('http')
+                            ? NetworkImage(profileImageUrl)
+                            : AssetImage('assets/images/$profileImageUrl')
+                                as ImageProvider)
+                        : AssetImage('assets/images/image27.png')
+                            as ImageProvider;
+
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: imageProvider,
+                        backgroundColor: Colors.grey[300],
+                        child: profileImageUrl == null
+                            ? Icon(Icons.person, color: Colors.white)
+                            : null,
+                      ),
+                      title: Text(friend.name ?? 'Unknown'),
+                      subtitle: Text(friend.email ?? 'No email'),
+                      trailing: isSelected
+                          ? Icon(Icons.check_circle, color: Colors.green)
+                          : null,
+                      onTap: () => _toggleFriendSelection(friend.id.toString()),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }

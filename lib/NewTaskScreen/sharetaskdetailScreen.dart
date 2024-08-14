@@ -45,7 +45,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
   @override
   Widget build(BuildContext context) {
     final Task? taskDetails = widget.task.task; // Task details
-    final User? sharerDetails = widget.task.sharer; // Sharer details
+    final ComingTaskModel? sharerDetails = widget.task; // Sharer details
 
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +82,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                   CircleAvatar(
                     radius: 50, // Adjust size as needed
                     backgroundImage: NetworkImage(
-                      taskDetails?.after.toString() ??
+                      '${sharerDetails!.sharer!.baseUrl}${sharerDetails.sharer!.image}' ??
                           'https://via.placeholder.com/150', // Use a placeholder URL if the profile image is not available
                     ),
                     backgroundColor: Colors.grey[300],
@@ -90,15 +90,15 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                   SizedBox(height: 16.0),
                   // Username and rank
                   Text(
-                    sharerDetails?.name ??
+                    sharerDetails?.sharer!.name ??
                         'Username', // Replace with actual username
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    sharerDetails?.id.toString() ??
-                        'Rank', // Replace with actual rank
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
+                  // Text(
+                  //   sharerDetails?.id.toString() ??
+                  //       'Rank', // Replace with actual rank
+                  //   style: TextStyle(fontSize: 16, color: Colors.grey),
+                  // ),
                 ],
               ),
             ),
