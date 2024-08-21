@@ -15,6 +15,7 @@ class ApiServices {
   static const String verifyOtp = '${baseUrl}/api/auth/verify-otp';
   static const String forgotPass = '${baseUrl}/api/auth/reset-password';
   static const String logOut = '${baseUrl}/api/auth/logout';
+  static const String updatedeviceToken = '${baseUrl}/api/auth/update-token';
   static const String createTask = '${baseUrl}/api/auth/task/create-task';
   static const String getmytaskList = '${baseUrl}/api/auth/task/my-task';
   static const String getallUser = '${baseUrl}/api/auth/non-friends';
@@ -34,6 +35,9 @@ class ApiServices {
       '$baseUrl/api/auth/task/accept/$shareId';
   // static const String acceptTask = '${baseUrl}/api/auth/task/accept/$shareId';
   static const String socialLogin = '${baseUrl}/api/auth/social-login';
+  static const String getrequestsendList = '${baseUrl}/api/auth/sent-requests';
+  static const String getsharetaskList =
+      '${baseUrl}/api/auth/task/shared-task-users';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String levels = '${baseUrl}user/levels';
   static const String exercises = '${baseUrl}user/exercises';

@@ -1,23 +1,67 @@
-class MyFriendsModel {
+class RequestSendModel {
+  int? id;
+  int? senderId;
+  int? receiverId;
+  String? status;
+  String? createdAt;
+  String? updatedAt;
+  Sender? sender;
+
+  RequestSendModel(
+      {this.id,
+      this.senderId,
+      this.receiverId,
+      this.status,
+      this.createdAt,
+      this.updatedAt,
+      this.sender});
+
+  RequestSendModel.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    senderId = json['sender_id'];
+    receiverId = json['receiver_id'];
+    status = json['status'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
+    sender =
+        json['sender'] != null ? new Sender.fromJson(json['sender']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['sender_id'] = this.senderId;
+    data['receiver_id'] = this.receiverId;
+    data['status'] = this.status;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
+    if (this.sender != null) {
+      data['sender'] = this.sender!.toJson();
+    }
+    return data;
+  }
+}
+
+class Sender {
   int? id;
   String? username;
   String? name;
   String? email;
   String? mobile;
-  String? dob;
+  Null? dob;
   String? image;
-  String? bgimage;
+  Null? bgimage;
   String? baseUrl;
   String? location;
   int? terms;
-  String? socialSignup;
+  Null? socialSignup;
   int? isAdmin;
   int? isActive;
   Null? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
-  MyFriendsModel(
+  Sender(
       {this.id,
       this.username,
       this.name,
@@ -36,7 +80,7 @@ class MyFriendsModel {
       this.updatedAt,
       this.createdAt});
 
-  MyFriendsModel.fromJson(Map<String, dynamic> json) {
+  Sender.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     username = json['username'];
     name = json['name'];

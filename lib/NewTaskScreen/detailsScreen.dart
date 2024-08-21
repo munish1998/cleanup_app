@@ -1,18 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
-import 'package:cleanup_mobile/Models/comingtaskModel.dart';
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
-import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
-import 'package:cleanup_mobile/Utils/commonMethod.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
+import 'package:cleanup_mobile/Models/comingtaskModel.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 
 class User {
   final int id;
@@ -112,7 +109,6 @@ class DetailTaskScreen extends StatefulWidget {
 
 class _DetailTaskScreenState extends State<DetailTaskScreen> {
   Taskk? _task;
-  ComingTaskModel? _comingtask;
   bool _isLoading = true;
 
   @override
@@ -166,19 +162,36 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   Future<void> _acceptTaskAndNavigate(String taskId) async {
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
 
-    // Accept the task
     try {
-      await taskProvider.fetchTaskDetails(context, taskId);
+      await taskProvider.fetchTaskDetails(context, taskId, 'pending');
 
-      // Navigate to ShareTaskScreen after task acceptance
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ShareTask(),
+          builder: (context) => ShareTask(
+            tasktitle: taskProvider.comingTask.first.task!.title.toString(),
+          ),
         ),
       );
     } catch (error) {
       _showError('Failed to accept task');
+    }
+  }
+
+  Future<void> _declineTaskAndNavigate(String taskId) async {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+    try {
+      await taskProvider.declinetaskRequest(context, taskId, 'cancelled');
+
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => ShareTask(),
+      //   ),
+      // );
+    } catch (error) {
+      _showError('Failed to decline task');
     }
   }
 
@@ -200,7 +213,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Task Details'),
-        backgroundColor: AppColor.appbarColor,
+        backgroundColor: AppColor.rank1Color,
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
@@ -211,201 +224,135 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
   }
 
   Widget _buildTaskDetails() {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailCard(
-              title: 'Task Title',
-              content: _task!.title,
-            ),
-            SizedBox(height: 16),
-            _buildDetailCard(
-              title: 'Location',
-              content: _task!.location,
-            ),
-            SizedBox(height: 16),
-            _buildDetailCard(
-              title: 'Description',
-              content: _task!.description,
-            ),
-            SizedBox(height: 16),
-            // TextButton(
-            //     onPressed: () {
-            //       _showShareOptionsBottomSheet(context);
-            //     },
-            //     child: Text('share task')),
-            SizedBox(height: 16),
-            _buildImageCard(
-              label: 'Before Image',
-              imageUrl: _task!.beforeImageUrl,
-            ),
-            SizedBox(height: 16),
-            _buildImageCard(
-              label: 'After Image',
-              imageUrl: _task!.afterImageUrl,
-            ),
-            SizedBox(height: 20),
-            InkWell(
-              onTap: () {
-                navPush(
-                  context: context,
-                  action: FriendTaskScreen(taskid: widget.taskId.toString()),
-                );
-              },
-              child: Container(
-                height: 54,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(17),
-                  color: AppColor.rank1Color,
-                ),
-                child: const Center(
-                  child: Text(
-                    'Share Task',
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            color: AppColor.rank1Color,
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height / 6,
+            child: Center(
+              child: Text(
+                'My Task',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailCard({required String title, required String content}) {
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueGrey[800],
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              content,
-              style: TextStyle(fontSize: 16, color: Colors.black87),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageCard({required String label, required String imageUrl}) {
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueGrey[800],
-              ),
-            ),
-            SizedBox(height: 8),
-            imageUrl.isNotEmpty
-                ? Image.network(imageUrl)
-                : Text(
-                    'No image available',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showShareOptionsBottomSheet(BuildContext context) {
-    final taskProviders = Provider.of<TaskProviders>(context, listen: false);
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Row with centered clickable images
-              Column(
-                children: [
-                  Text(
-                    'Invite freinds',
-                    style: TextStyle(color: Colors.black, fontSize: 10),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          navPush(
-                              context: context,
-                              action: FriendTaskScreen(
-                                  taskid: widget.taskId.toString()));
-                          // Handle first image tap
-                          print('Image 1 clicked');
-                        },
-                        child: Image.asset('assets/images/image16.png'),
-                      ),
-                      SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          // Handle second image tap
-                          print('Image 2 clicked');
-                        },
-                        child: Image.asset('assets/images/image15.png'),
-                      ),
-                      SizedBox(width: 16),
-                      GestureDetector(
-                        onTap: () {
-                          // Handle third image tap
-                          print('Image 3 clicked');
-                        },
-                        child: Image.asset('assets/images/image14.png'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
           ),
-        );
-      },
-    );
-  }
-
-  void _showErrorSnackbar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColor.appbarColor,
+          Container(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(
+                    _task?.user.username ?? 'https://via.placeholder.com/150',
+                  ),
+                  backgroundColor: Colors.grey[300],
+                ),
+                SizedBox(height: 16.0),
+                Text(
+                  _task?.user.name ?? 'Username',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(16.0),
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    _task?.title ?? 'Title',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    _task?.description ?? 'Description',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: _task?.beforeImageUrl.isNotEmpty == true
+                            ? Image.network(
+                                _task!.beforeImageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/default_image.png',
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'assets/images/default_image.png',
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                    SizedBox(width: 16.0),
+                    Expanded(
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: _task?.afterImageUrl.isNotEmpty == true
+                            ? Image.network(
+                                _task!.afterImageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.asset(
+                                    'assets/images/default_image.png',
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                'assets/images/default_image.png',
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.0),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,4 +1,31 @@
-class MyFriendsModel {
+class ShareTaskModel {
+  int? taskId;
+  int? userId;
+  int? taskCount;
+  User? user;
+
+  ShareTaskModel({this.taskId, this.userId, this.taskCount, this.user});
+
+  ShareTaskModel.fromJson(Map<String, dynamic> json) {
+    taskId = json['task_id'];
+    userId = json['user_id'];
+    taskCount = json['task_count'];
+    user = json['user'] != null ? new User.fromJson(json['user']) : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['task_id'] = this.taskId;
+    data['user_id'] = this.userId;
+    data['task_count'] = this.taskCount;
+    if (this.user != null) {
+      data['user'] = this.user!.toJson();
+    }
+    return data;
+  }
+}
+
+class User {
   int? id;
   String? username;
   String? name;
@@ -13,11 +40,11 @@ class MyFriendsModel {
   String? socialSignup;
   int? isAdmin;
   int? isActive;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
-  MyFriendsModel(
+  User(
       {this.id,
       this.username,
       this.name,
@@ -36,7 +63,7 @@ class MyFriendsModel {
       this.updatedAt,
       this.createdAt});
 
-  MyFriendsModel.fromJson(Map<String, dynamic> json) {
+  User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     username = json['username'];
     name = json['name'];

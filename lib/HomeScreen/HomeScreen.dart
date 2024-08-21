@@ -6,8 +6,10 @@ import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen1.dart';
 import 'package:cleanup_mobile/NewTaskScreen/completetaskScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/newtasksScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/pendingTask.dart';
+import 'package:cleanup_mobile/NewTaskScreen/sharetasklistScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/pendilistRequest.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/requestsendList.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Drawer.dart';
 import 'package:cleanup_mobile/Utils/Setting_Drawer.dart';
@@ -38,7 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
     await taskProvider.getMyTaskList(context: context);
     await taskProvider.fetchIncomingTasks('new');
-    await taskProvider.fetchPendingTasks('pending'); // Adjust status as needed
+    await taskProvider.fetchPendingTasks('pending');
+    taskProvider.getToken(); // Adjust status as needed
   }
 
   Future<void> _onRefresh() async {
@@ -162,6 +165,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                 )),
                       ),
                     ),
+                    _buildTaskCard(
+                      context,
+                      title: 'Request send list',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.mycompletes.length}',
+                      trailingColor: Colors.purple,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ShareTaskScreen()),
+                      ),
+                    ),
                     const SizedBox(height: 17),
                     const Divider(
                       color: AppColor.dividerColor,
@@ -199,8 +214,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: const Icon(
             Icons.add,
             color: Colors.white,
-            size: 40,
+            size: 30,
           ),
+          mini: true,
           shape: const CircleBorder(),
         ),
       ),

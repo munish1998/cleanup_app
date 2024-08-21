@@ -1,58 +1,24 @@
+import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
-import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:provider/provider.dart';
 
-class SharTaskDetail extends StatefulWidget {
-  final ComingTaskModel task;
+class PendingTaskDetailScreen extends StatefulWidget {
+  final PendingTaskModel task;
   final String taskid;
 
-  SharTaskDetail({Key? key, required this.task, required this.taskid})
+  PendingTaskDetailScreen({Key? key, required this.task, required this.taskid})
       : super(key: key);
 
   @override
-  _SharTaskDetailState createState() => _SharTaskDetailState();
+  _PendingTaskDetailScreenState createState() =>
+      _PendingTaskDetailScreenState();
 }
 
-class _SharTaskDetailState extends State<SharTaskDetail> {
-  Future<void> _acceptTaskAndNavigate(String taskId) async {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    try {
-      await taskProvider.fetchTaskDetails(context, taskId, 'pending');
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShareTask(
-            tasktitle: taskProvider.comingTask.first.task!.title.toString(),
-          ),
-        ),
-      );
-    } catch (error) {
-      _showError('Failed to accept task');
-    }
-  }
-
-  Future<void> _declineTaskAndNavigate(String taskId) async {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    try {
-      await taskProvider.declinetaskRequest(context, taskId, 'cancelled');
-
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ShareTask(),
-      //   ),
-      // );
-    } catch (error) {
-      _showError('Failed to decline task');
-    }
-  }
-
+class _PendingTaskDetailScreenState extends State<PendingTaskDetailScreen> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -62,7 +28,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
   @override
   Widget build(BuildContext context) {
     final Task? taskDetails = widget.task.task;
-    final ComingTaskModel? sharerDetails = widget.task;
+    final PendingTaskModel? sharerDetails = widget.task;
 
     return Scaffold(
       appBar: AppBar(
@@ -195,54 +161,30 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                   ),
                   SizedBox(height: 16.0),
                   // Row for Accept and Decline Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            _declineTaskAndNavigate(widget.taskid);
-                          },
-                          child: Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Colors.red),
-                            child: const Center(
-                              child: Text(
-                                'Decline Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
+                  InkWell(
+                    onTap: () {
+                      navPush(
+                          context: context,
+                          action: ShareTask(
+                            tasktitle: taskDetails.title.toString(),
+                          ));
+                      //   _acceptTaskAndNavigate(widget.taskid);
+                    },
+                    child: Container(
+                      height: 54,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: AppColor.rank1Color),
+                      child: const Center(
+                        child: Text(
+                          'Share Task',
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
-                      SizedBox(width: 16.0),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            _acceptTaskAndNavigate(widget.taskid);
-                          },
-                          child: Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: AppColor.rank1Color),
-                            child: const Center(
-                              child: Text(
-                                'Accept Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),

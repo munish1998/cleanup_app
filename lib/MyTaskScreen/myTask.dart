@@ -69,7 +69,7 @@ class _MyTaskListState extends State<MyTaskList> {
               itemCount: taskProvider.mytasklist.length,
               itemBuilder: (context, index) {
                 final task = taskProvider.mytasklist[index];
-                final profileImageUrl = task.after;
+                String statusText = task.status == "1" ? 'Draft' : 'Completed';
 
                 return InkWell(
                   onTap: () {
@@ -90,8 +90,10 @@ class _MyTaskListState extends State<MyTaskList> {
                     child: ListTile(
                       contentPadding: EdgeInsets.all(12),
                       leading: CircleAvatar(
-                        child: Image.network('${task.baseUrl}${task.after}'),
-                        // radius: 100,
+                        backgroundImage:
+                            NetworkImage('${task.baseUrl}${task.after}'),
+                        backgroundColor: Colors.grey[
+                            300], // Add a background color in case the image fails to load
                       ),
                       title: Text(
                         '${task.title}',
@@ -108,6 +110,15 @@ class _MyTaskListState extends State<MyTaskList> {
                         style: TextStyle(
                           color: Colors.black54,
                           fontSize: 14,
+                        ),
+                      ),
+                      trailing: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: statusText == 'Draft'
+                              ? Colors.orange
+                              : Colors.green,
                         ),
                       ),
                     ),

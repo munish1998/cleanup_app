@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:developer';
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
@@ -17,7 +18,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ShareTask extends StatefulWidget {
-  const ShareTask({super.key});
+  String tasktitle;
+  ShareTask({super.key, required this.tasktitle});
 
   @override
   State<ShareTask> createState() => _ShareTaskState();
@@ -47,28 +49,14 @@ class _ShareTaskState extends State<ShareTask> {
           child: const Icon(Icons.arrow_back, color: Colors.black),
         ),
         centerTitle: true,
-        title: const Text(
-          'New Task',
+        title: Text(
+          widget.tasktitle,
           style: TextStyle(
             color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: InkWell(
-              onTap: () {
-                // _scaffoldKey.currentState!.openDrawer();
-              },
-              child: Image.asset(
-                'assets/images/image28.png',
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -76,44 +64,6 @@ class _ShareTaskState extends State<ShareTask> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                elevation: 0.2,
-                child: Container(
-                  height: 90,
-                  width: 390,
-                  decoration: BoxDecoration(
-                    color: AppColor.backgroundcontainerColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 15, top: 15, right: 15),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'Task title',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        TextField(
-                          controller: _tasktitleController,
-                          decoration: const InputDecoration(
-                            hintText: 'Task title',
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 15),
               Card(
                 elevation: 0.2,
@@ -348,8 +298,7 @@ class _ShareTaskState extends State<ShareTask> {
     final description = _descriptionController.text.trim();
 
     // Validation checks
-    if (title.isEmpty ||
-        location.isEmpty ||
+    if (location.isEmpty ||
         description.isEmpty ||
         _beforeImage == null ||
         _afterImage == null) {
@@ -368,16 +317,17 @@ class _ShareTaskState extends State<ShareTask> {
 
     bool success = await taskProvider.sharecreateTask(
         context: context,
-        title: title,
+        title: 'hello',
         userid: userid,
         location: location,
         description: description,
         beforeImage: _beforeImage!,
         afterImage: _afterImage!,
-        sharetaskID: taskProvider.comingTask.first.sharer!.id.toString(),
+        sharetaskID: "31",
         status: '2');
 
     if (success) {
+      navPush(context: context, action: LoginScreen());
       //  _showShareOptionsBottomSheet(context);
     } else {
       _showErrorSnackbar(context, 'Failed to create task.');

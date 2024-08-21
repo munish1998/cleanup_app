@@ -37,6 +37,13 @@
             {
               "client_id": "30736213150-9mfbvpf08o171is0j93rpul14csva32o.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "30736213150-0q7nt5lcaej89mr7ue81lfqkns2pikdf.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cleanupMobile"
+              }
             }
           ]
         }

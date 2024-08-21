@@ -38,7 +38,26 @@ class _UpcomingTaskScreenState extends State<UpcomingTaskScreen> {
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
 
     // Accept the task
-    await taskProvider.fetchTaskDetails(context, task.sharerId.toString());
+    await taskProvider.fetchTaskDetails(
+        context, task.sharerId.toString(), 'pending');
+
+    // Navigate to details screen after task acceptance
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SharTaskDetail(
+          task: task,
+          taskid: task.id.toString(),
+        ), // Pass the selected task
+      ),
+    );
+  }
+
+  Future<void> _declineTaskAndNavigate(ComingTaskModel task) async {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+    // Accept the task
+    await taskProvider.fetchTaskDetails(context, task.sharerId.toString(), '');
 
     // Navigate to details screen after task acceptance
     Navigator.push(

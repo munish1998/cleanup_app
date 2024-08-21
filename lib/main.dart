@@ -24,28 +24,27 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-      // Replace with actual values
-      // options: FirebaseOptions(
-      //   apiKey: "AIzaSyBtr4YxUIDzMARKWHJUjtKYJoCo3RUQQmw",
-      //   appId: "1:30736213150:android:64ca324d5dea35c1a0078f",
-      //   messagingSenderId: "30736213150",
-      //   projectId: "cleanup-44c1b",
-      // ),
+      //   // Replace with actual values
+      //   options: FirebaseOptions(
+      //     apiKey: "AIzaSyBtr4YxUIDzMARKWHJUjtKYJoCo3RUQQmw",
+      //     appId: "1:30736213150:android:64ca324d5dea35c1a0078f",
+      //     messagingSenderId: "30736213150",
+      //     projectId: "cleanup-44c1b",
       );
 
   // await _msgService.init();
   // FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
+  // await flutterLocalNotificationsPlugin
+  //     .resolvePlatformSpecificImplementation<
+  //         AndroidFlutterLocalNotificationsPlugin>()
+  //     ?.createNotificationChannel(channel);
 
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  // await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  //   alert: true,
+  //   badge: true,
+  //   sound: true,
+  // );
 
   runApp(const MyApp());
 }

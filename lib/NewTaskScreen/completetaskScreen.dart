@@ -179,7 +179,7 @@ class _CompleteTaskScreenState extends State<CompleteTaskScreen> {
 
     // Accept the task
     await taskProvider.fetchTaskDetails(
-        context, taskProvider.comingTask.first.sharerId.toString());
+        context, taskProvider.comingTask.first.sharerId.toString(), 'pending');
 
     // Navigate to details screen after task acceptance
     Navigator.push(

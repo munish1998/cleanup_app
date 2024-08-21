@@ -40,7 +40,7 @@ class _CreateTaskState extends State<CreateTask> {
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromARGB(255, 248, 253, 255),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 248, 253, 255),
+        backgroundColor: AppColor.rank1Color,
         leading: InkWell(
           onTap: () {
             Navigator.pop(context);
@@ -56,20 +56,6 @@ class _CreateTaskState extends State<CreateTask> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: InkWell(
-              onTap: () {
-                // _scaffoldKey.currentState!.openDrawer();
-              },
-              child: Image.asset(
-                'assets/images/image28.png',
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -322,7 +308,7 @@ class _CreateTaskState extends State<CreateTask> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
-        padding: const EdgeInsets.all(25.0),
+        padding: const EdgeInsets.all(5.0),
         child: FloatingActionButton(
           onPressed: () {
             Navigator.push(
@@ -334,8 +320,9 @@ class _CreateTaskState extends State<CreateTask> {
           child: const Icon(
             Icons.add,
             color: Colors.white,
-            size: 40,
+            size: 30,
           ),
+          mini: true,
           shape: const CircleBorder(),
         ),
       ),

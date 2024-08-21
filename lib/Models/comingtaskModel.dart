@@ -8,7 +8,7 @@ class ComingTaskModel {
   String? updatedAt;
   User? user;
   Task? task;
-  Sharer? sharer;
+  User? sharer;
 
   ComingTaskModel(
       {this.id,
@@ -32,8 +32,7 @@ class ComingTaskModel {
     updatedAt = json['updated_at'];
     user = json['user'] != null ? new User.fromJson(json['user']) : null;
     task = json['task'] != null ? new Task.fromJson(json['task']) : null;
-    sharer =
-        json['sharer'] != null ? new Sharer.fromJson(json['sharer']) : null;
+    sharer = json['sharer'] != null ? new User.fromJson(json['sharer']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -64,9 +63,9 @@ class User {
   String? name;
   String? email;
   String? mobile;
-  Null? dob;
+  String? dob;
   String? image;
-  Null? bgimage;
+  String? bgimage;
   String? baseUrl;
   String? location;
   int? terms;
@@ -196,87 +195,6 @@ class Task {
     data['status'] = this.status;
     data['created_at'] = this.createdAt;
     data['updated_at'] = this.updatedAt;
-    return data;
-  }
-}
-
-class Sharer {
-  int? id;
-  String? username;
-  String? name;
-  String? email;
-  String? mobile;
-  Null? dob;
-  String? image;
-  String? bgimage;
-  String? baseUrl;
-  String? location;
-  int? terms;
-  Null? socialSignup;
-  int? isAdmin;
-  int? isActive;
-  Null? emailVerifiedAt;
-  String? updatedAt;
-  String? createdAt;
-
-  Sharer(
-      {this.id,
-      this.username,
-      this.name,
-      this.email,
-      this.mobile,
-      this.dob,
-      this.image,
-      this.bgimage,
-      this.baseUrl,
-      this.location,
-      this.terms,
-      this.socialSignup,
-      this.isAdmin,
-      this.isActive,
-      this.emailVerifiedAt,
-      this.updatedAt,
-      this.createdAt});
-
-  Sharer.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    username = json['username'];
-    name = json['name'];
-    email = json['email'];
-    mobile = json['mobile'];
-    dob = json['dob'];
-    image = json['image'];
-    bgimage = json['bgimage'];
-    baseUrl = json['base_url'];
-    location = json['location'];
-    terms = json['terms'];
-    socialSignup = json['social_signup'];
-    isAdmin = json['is_admin'];
-    isActive = json['is_active'];
-    emailVerifiedAt = json['email_verified_at'];
-    updatedAt = json['updated_at'];
-    createdAt = json['created_at'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['username'] = this.username;
-    data['name'] = this.name;
-    data['email'] = this.email;
-    data['mobile'] = this.mobile;
-    data['dob'] = this.dob;
-    data['image'] = this.image;
-    data['bgimage'] = this.bgimage;
-    data['base_url'] = this.baseUrl;
-    data['location'] = this.location;
-    data['terms'] = this.terms;
-    data['social_signup'] = this.socialSignup;
-    data['is_admin'] = this.isAdmin;
-    data['is_active'] = this.isActive;
-    data['email_verified_at'] = this.emailVerifiedAt;
-    data['updated_at'] = this.updatedAt;
-    data['created_at'] = this.createdAt;
     return data;
   }
 }

@@ -34,11 +34,14 @@ class _PendingListScreenState extends State<PendingListScreen> {
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .acceptFriendRequest(context: context, requestId: requestId);
-      // Navigate to ShareTaskScreen upon success
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => ShareTask()),
-      // );
+      //  Navigate to ShareTaskScreen upon success
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ShareTask(
+                  tasktitle: '',
+                )),
+      );
     } catch (e) {
       // Handle any errors that occur during acceptance
       print('Error accepting friend request: $e');

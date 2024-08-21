@@ -47,7 +47,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
                     final friend = taskProvider.myfriends[index];
 
                     // Construct the full image URL if necessary
-                    final baseUrl = 'https://yourdomain.com/path/to/image/';
+                    final baseUrl = 'https://webpristine.com/cleanup/public';
                     final profileImageUrl =
                         friend.image != null ? '$baseUrl${friend.image}' : null;
 

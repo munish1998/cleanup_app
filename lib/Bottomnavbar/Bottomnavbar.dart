@@ -23,7 +23,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final taskProvider = Provider.of<TaskProviders>(context);
     return Container(
-      height: 90,
+      height: 50,
       decoration: BoxDecoration(
         color: Colors.white, // Set the background color to white
         boxShadow: [

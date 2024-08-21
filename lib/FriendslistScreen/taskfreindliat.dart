@@ -1,8 +1,10 @@
 import 'dart:developer';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
 
 class FriendTaskScreen extends StatefulWidget {
   final String? taskid;
@@ -19,13 +21,20 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskProviders>(context, listen: false)
-          .getmyfreindsList(context: context);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+      // Fetch the list of friends
+      await taskProvider.getmyfreindsList(context: context);
+
+      // Fetch the task count if taskid is available
+      if (widget.taskid != null) {
+        await taskProvider.fetchTaskCount(widget.taskid!);
+      }
     });
   }
 
-  void _toggleFriendSelection(String friendId) {
+  void _toggleFriendSelection(String friendId) async {
     setState(() {
       if (selectedFriends.contains(friendId)) {
         selectedFriends.remove(friendId);
@@ -38,7 +47,15 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
           );
         }
       }
+      // Log the updated selected friends list
+      log('Updated selected friends: $selectedFriends');
     });
+
+    // Fetch the task count again after updating the selected friends
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+    if (widget.taskid != null) {
+      await taskProvider.fetchTaskCount(widget.taskid!);
+    }
   }
 
   void _shareSelectedFriends() async {
@@ -78,6 +95,12 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
 
       Navigator.of(context).pop(); // Close the dialog
 
+      // Navigate to the home screen and remove the previous route
+      navPushReplace(
+        context: context,
+        action: HomeScreen(),
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Task shared successfully!')),
       );
@@ -96,25 +119,29 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
       appBar: AppBar(
         backgroundColor: AppColor.rank1Color,
         title: Text('My Friends List'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.share),
-            onPressed: _shareSelectedFriends,
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(30.0),
+          child: Consumer<TaskProviders>(
+            builder: (context, taskProvider, child) {
+              if (widget.taskid != null && taskProvider.taskCount != null) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Task Shared Count: ${taskProvider.taskCount}',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                );
+              } else {
+                return Container(); // Empty container if no task count is available
+              }
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Center(
-              child: Text(
-                '${selectedFriends.length} Selected',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
       body: Consumer<TaskProviders>(
         builder: (context, taskProvider, child) {
-          if (taskProvider.myfriends.isEmpty) {
+          if (taskProvider.myfriends == null ||
+              taskProvider.myfriends.isEmpty) {
             return Center(child: Text('No friends found'));
           }
 
@@ -125,36 +152,70 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
                   itemCount: taskProvider.myfriends.length,
                   itemBuilder: (context, index) {
                     final friend = taskProvider.myfriends[index];
-                    final isSelected = selectedFriends.contains(friend.id);
+                    final isSelected =
+                        selectedFriends.contains(friend.id.toString());
 
-                    // Determine the image URL or use default image
-                    final profileImageUrl = friend.image;
+                    // Construct the full image URL
+                    final baseUrl = 'https://webpristine.com/cleanup/public/';
+                    final profileImageUrl =
+                        friend.image != null ? '$baseUrl${friend.image}' : null;
+
                     log('Image URL: $profileImageUrl');
 
-                    final imageProvider = profileImageUrl != null
-                        ? (profileImageUrl.startsWith('http')
-                            ? NetworkImage(profileImageUrl)
-                            : AssetImage('assets/images/$profileImageUrl')
-                                as ImageProvider)
-                        : AssetImage('assets/images/image27.png')
-                            as ImageProvider;
-
                     return ListTile(
+                      tileColor:
+                          isSelected ? Colors.blue.shade100 : Colors.white,
                       leading: CircleAvatar(
-                        backgroundImage: imageProvider,
+                        backgroundImage: profileImageUrl != null
+                            ? NetworkImage(profileImageUrl)
+                            : AssetImage('assets/images/image27.png')
+                                as ImageProvider,
                         backgroundColor: Colors.grey[300],
                         child: profileImageUrl == null
                             ? Icon(Icons.person, color: Colors.white)
                             : null,
+                        onBackgroundImageError: (error, stackTrace) {
+                          log('Image load error: $error');
+                        },
                       ),
-                      title: Text(friend.name ?? 'Unknown'),
-                      subtitle: Text(friend.email ?? 'No email'),
+                      title: Text(
+                        friend.name ?? 'Unknown',
+                        style: TextStyle(
+                          color: isSelected ? Colors.blue : Colors.black,
+                        ),
+                      ),
+                      subtitle: Text(
+                        friend.email ?? 'No email',
+                        style: TextStyle(
+                          color: isSelected ? Colors.blueGrey : Colors.black54,
+                        ),
+                      ),
                       trailing: isSelected
                           ? Icon(Icons.check_circle, color: Colors.green)
                           : null,
                       onTap: () => _toggleFriendSelection(friend.id.toString()),
                     );
                   },
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  _shareSelectedFriends();
+                },
+                child: Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: AppColor.rank1Color),
+                  child: const Center(
+                    child: Text(
+                      'Share Task',
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
             ],

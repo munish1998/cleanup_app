@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
 import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
+import 'package:cleanup_mobile/Models/RequestSendModel.dart';
 import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:cleanup_mobile/Models/completetaskModel.dart';
 import 'package:cleanup_mobile/Models/detailtaskModel.dart';
@@ -12,12 +13,14 @@ import 'package:cleanup_mobile/Models/mytaskModel.dart';
 import 'package:cleanup_mobile/Models/newtaskModel.dart';
 import 'package:cleanup_mobile/Models/pendingRequest.dart';
 import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
+import 'package:cleanup_mobile/Models/sharetaskModel.dart';
 import 'package:cleanup_mobile/Models/userModel.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
 import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:cleanup_mobile/apiServices/apiServices.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +34,8 @@ class TaskProviders with ChangeNotifier {
   // MyTaskModel? myTaskModel; // Getter for the loading state
   List<MyTask> _mytasklist = [];
   List<MyTask> get mytasklist => _mytasklist;
+  List<ShareTaskModel> _sharetasklist = [];
+  List<ShareTaskModel> get sharetasklist => _sharetasklist;
   List<MyTaskModel> _mytask = [];
   List<MyTaskModel> get mytask => _mytask;
   List<Taskk> _tasks = [];
@@ -39,6 +44,8 @@ class TaskProviders with ChangeNotifier {
   List<Taskk> get tasks => _tasks;
   List<AllUserModel> _allUser = [];
   List<AllUserModel> get allUser => _allUser;
+  List<RequestSendModel> _requestsendlist = [];
+  List<RequestSendModel> get requestsendlist => _requestsendlist;
   List<MyFriendsModel> _myfreinds = [];
   List<MyFriendsModel> get myfriends => _myfreinds;
   List<CompleteTaskModel> _mycompletes = [];
@@ -65,9 +72,339 @@ class TaskProviders with ChangeNotifier {
   TextEditingController get areaController => _areaController;
   bool _isExercise = false;
   MyTaskModel? _myTaskModel;
+  String _token = '';
+
+  String get token => _token;
 
   MyTaskModel? get myTaskModel => _myTaskModel;
   bool get isExercise => _isExercise;
+
+  int _taskCount = 0;
+  int get taskCount => _taskCount;
+
+  Future<void> fetchTaskCount(String taskId) async {
+    final String url =
+        '${ApiServices.baseUrl}/api/auth/task/shared-count/$taskId';
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    if (accessToken == null) {
+      throw Exception('Authorization token is missing.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        _taskCount = responseData['count'];
+        log('task count response ===>>>$_taskCount'); // Extract the count from the response
+        notifyListeners(); // Notify listeners to update the UI
+      } else {
+        throw Exception('Failed to fetch task count.');
+      }
+    } catch (e) {
+      print('Error fetching task count: $e');
+      throw Exception('An error occurred while fetching the task count.');
+    }
+  }
+
+  Future<bool> createTask({
+    required BuildContext context,
+    required String title,
+    required String userid,
+    required String location,
+    required String description,
+    required String share_task_id,
+    required String status,
+    File? beforeImage,
+    File? afterImage,
+  }) async {
+    var url = Uri.parse(ApiServices.createTask);
+    showLoaderDialog(context, 'Please wait...');
+
+    var request = http.MultipartRequest('POST', url);
+
+    // Add text fields
+    request.fields['title'] = title;
+    request.fields['location'] = location;
+    request.fields['description'] = description;
+    request.fields['user_id'] = userid;
+    request.fields['share_task_id'] = share_task_id;
+    request.fields['status'] = status;
+
+    // Add image files
+    if (beforeImage != null) {
+      var beforeFile =
+          await http.MultipartFile.fromPath('before', beforeImage.path);
+      request.files.add(beforeFile);
+    }
+
+    if (afterImage != null) {
+      var afterFile =
+          await http.MultipartFile.fromPath('after', afterImage.path);
+      request.files.add(afterFile);
+    }
+
+    // Add headers
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+    request.headers['Authorization'] = 'Bearer $accessToken';
+    request.headers['access_token'] = accessToken ?? '';
+    request.headers['Content-Type'] = 'multipart/form-data';
+    log('accesstoken=====>>>${accessToken ?? ''}');
+
+    try {
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      log('create task response ===>>>>: ${response.body}');
+
+      if (response.statusCode == 200) {
+        var result = jsonDecode(response.body);
+        if (result['success']) {
+          // Extract task ID from the response
+          final taskId = result['task']['id'];
+
+          notifyListeners();
+          commonToast(msg: result['message'], color: Colors.blue);
+          void _showShareOptionsBottomSheet(
+            BuildContext context,
+          ) {
+            final taskProviders =
+                Provider.of<TaskProviders>(context, listen: false);
+          }
+
+          // Navigate to FriendListScreen with the task ID
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) =>
+                    FriendTaskScreen(taskid: taskId.toString()),
+              ),
+            );
+          });
+
+          return true; // Task created successfully
+        } else {
+          commonToast(msg: result['message'], color: Colors.red);
+          return false; // Task creation failed
+        }
+      } else {
+        print('Failed to create task. Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        commonToast(msg: 'Failed to create task', color: Colors.red);
+        return false; // Task creation failed
+      }
+    } catch (e) {
+      print('Error: $e');
+      commonToast(msg: 'An error occurred', color: Colors.red);
+      return false; // Task creation failed
+    } finally {
+      navPop(context: context);
+    }
+  }
+
+  void getToken() async {
+    _token = (await FirebaseMessaging.instance.getToken())!;
+    log('device token response ===>>>>$_token');
+  }
+
+  Future<void> fetchTaskDetails(
+      BuildContext context, String shareId, String status) async {
+    final String url =
+        '${ApiServices.baseUrl}/api/auth/task/accept?shareid=$shareId&status=$status';
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    log('Share ID: $shareId, Status: $status');
+
+    // Check if the access token is missing
+    if (accessToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Authorization token is missing.')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final taskDetails = json.decode(response.body);
+        log('Response from accept task: $taskDetails');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Task accepted successfully!')),
+        );
+
+        // Update the state or notify listeners if needed
+        // For example, you might want to refresh the task list or update the UI
+        // notifyListeners(); // If using a provider
+      } else {
+        // Handle non-200 status codes
+        log('Failed to update task. Status code: ${response.statusCode}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Failed to update task. Status code: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      // Log the error and show a user-friendly message
+      log('Error updating task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
+      );
+    }
+  }
+
+  Future<void> declinetaskRequest(
+      BuildContext context, String shareId, String status) async {
+    final String url =
+        '${ApiServices.baseUrl}/api/auth/task/accept?shareid=$shareId&status=$status';
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    log('Share ID: $shareId, Status: $status');
+
+    if (accessToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Authorization token is missing.')),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final taskDetails = json.decode(response.body);
+        log('Response from accept task: $taskDetails');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Decline Task!')),
+        );
+
+        // You may want to update the state or notify listeners here
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Failed to update task. Status code: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      log('Error updating task: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
+      );
+    }
+  }
+
+  Future<void> getsharetaskList({
+    required BuildContext context,
+  }) async {
+    var url = Uri.parse(ApiServices.getsharetaskList);
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      // Make the GET request with headers
+      final response = await http.get(url, headers: headers);
+
+      // log('Response status: ${response.statusCode}');
+      log('Response of share task: ${response.body}');
+      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of user objects
+        List<dynamic> userList = jsonDecode(response.body);
+
+        _sharetasklist = userList
+            .map((userData) => ShareTaskModel.fromJson(userData))
+            .toList();
+        //   log('userlist response ====>>>>$_allUser');
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        // Handle server error
+        _sharetasklist = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _sharetasklist = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
+  Future<void> getrequestsendList({
+    required BuildContext context,
+  }) async {
+    var url = Uri.parse(ApiServices.getrequestsendList);
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      // Make the GET request with headers
+      final response = await http.get(url, headers: headers);
+
+      log('Response status: ${response.statusCode}');
+      log('Response body: ${response.body}');
+      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of user objects
+        List<dynamic> userList = jsonDecode(response.body);
+
+        _requestsendlist = userList
+            .map((userData) => RequestSendModel.fromJson(userData))
+            .toList();
+        log('requestsendlist response ====>>>>$_requestsendlist');
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        // Handle server error
+        _requestsendlist = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _requestsendlist = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
 
   Future<void> fetchTasks({required BuildContext context}) async {
     _isLoading = true;
@@ -268,8 +605,8 @@ class TaskProviders with ChangeNotifier {
 
       // Log the full response for debugging
       ////  log('Response status: ${response.statusCode}');
-      log('Response headers: ${response.headers}');
-      log('Response of pending/user/completed task: ${response.body}');
+      // log('Response headers: ${response.headers}');
+      log('Response of pending task: ${response.body}');
 
       // Check if the response content type is JSON
       if (response.headers['content-type']?.contains('application/json') ==
@@ -337,102 +674,6 @@ class TaskProviders with ChangeNotifier {
       log('Error: $e');
       _allUser = [];
       customToast(context: context, msg: 'An error occurred', type: 0);
-    }
-  }
-
-  Future<bool> createTask({
-    required BuildContext context,
-    required String title,
-    required String userid,
-    required String location,
-    required String description,
-    required String share_task_id,
-    required String status,
-    File? beforeImage,
-    File? afterImage,
-  }) async {
-    var url = Uri.parse(ApiServices.createTask);
-    showLoaderDialog(context, 'Please wait...');
-
-    var request = http.MultipartRequest('POST', url);
-
-    // Add text fields
-    request.fields['title'] = title;
-    request.fields['location'] = location;
-    request.fields['description'] = description;
-    request.fields['user_id'] = userid;
-    request.fields['share_task_id'] = share_task_id;
-    request.fields['status'] = status;
-
-    // Add image files
-    if (beforeImage != null) {
-      var beforeFile =
-          await http.MultipartFile.fromPath('before', beforeImage.path);
-      request.files.add(beforeFile);
-    }
-
-    if (afterImage != null) {
-      var afterFile =
-          await http.MultipartFile.fromPath('after', afterImage.path);
-      request.files.add(afterFile);
-    }
-
-    // Add headers
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-    request.headers['Authorization'] = 'Bearer $accessToken';
-    request.headers['access_token'] = accessToken ?? '';
-    request.headers['Content-Type'] = 'multipart/form-data';
-    log('accesstoken=====>>>${accessToken ?? ''}');
-
-    try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      log('create task response ===>>>>: ${response.body}');
-
-      if (response.statusCode == 200) {
-        var result = jsonDecode(response.body);
-        if (result['success']) {
-          // Extract task ID from the response
-          final taskId = result['task']['id'];
-
-          notifyListeners();
-          commonToast(msg: result['message'], color: Colors.blue);
-          void _showShareOptionsBottomSheet(
-            BuildContext context,
-          ) {
-            final taskProviders =
-                Provider.of<TaskProviders>(context, listen: false);
-          }
-
-          // Navigate to FriendListScreen with the task ID
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    FriendTaskScreen(taskid: taskId.toString()),
-              ),
-            );
-          });
-
-          return true; // Task created successfully
-        } else {
-          commonToast(msg: result['message'], color: Colors.red);
-          return false; // Task creation failed
-        }
-      } else {
-        print('Failed to create task. Status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        commonToast(msg: 'Failed to create task', color: Colors.red);
-        return false; // Task creation failed
-      }
-    } catch (e) {
-      print('Error: $e');
-      commonToast(msg: 'An error occurred', color: Colors.red);
-      return false; // Task creation failed
-    } finally {
-      navPop(context: context);
     }
   }
 
@@ -649,8 +890,8 @@ class TaskProviders with ChangeNotifier {
       // Make the GET request with headers
       final response = await http.get(url, headers: headers);
 
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
+      //  log('Response status: ${response.statusCode}');
+      log('Response of myfreindlist: ${response.body}');
       log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
       if (response.statusCode == 200) {
         // Parse the response body as a list of user objects
@@ -659,7 +900,7 @@ class TaskProviders with ChangeNotifier {
         _myfreinds = userList
             .map((userData) => MyFriendsModel.fromJson(userData))
             .toList();
-        log('userlist response ====>>>>$_allUser');
+        log('userlist response ====>>>>$_myfreinds');
         notifyListeners(); // Notify listeners if using Provider
       } else {
         // Handle server error
@@ -703,8 +944,8 @@ class TaskProviders with ChangeNotifier {
           await http.post(url, headers: headers, body: jsonEncode(body));
 
       // Log the response status and body
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
+      // log('Response status: ${response.statusCode}');
+      log('Response share task: ${response.body}');
       log('rsponse of accesstoken===>>>$accessToken');
       log('response of taskid==>>>$taskId');
       log('response of IDs==>>>$friendIds');
@@ -804,50 +1045,6 @@ class TaskProviders with ChangeNotifier {
       return false; // Task creation failed
     } finally {
       navPop(context: context);
-    }
-  }
-
-  Future<void> fetchTaskDetails(BuildContext context, String taskId) async {
-    final String url = '${ApiServices.baseUrl}/api/auth/task/accept/$taskId';
-
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-    log('task id response ===>>>$taskId');
-    if (accessToken == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Authorization token is missing.')),
-      );
-      return;
-    }
-
-    try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        // Process the response if needed and fetch task details
-        final taskDetails = json.decode(response.body);
-        log('response of accept task===>>>$taskDetails'); // Adjust according to your response structure
-        // Use this data as needed or notify listeners
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task accepted successfully!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Failed to accept task. Status code: ${response.statusCode}')),
-        );
-      }
-    } catch (e) {
-      print('Error accepting task: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred.')),
-      );
     }
   }
 }

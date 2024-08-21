@@ -1,8 +1,4 @@
-import 'dart:developer';
-import 'package:cleanup_mobile/Models/comingtaskModel.dart';
-import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
-import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
-import 'package:cleanup_mobile/NewTaskScreen/sharetaskdetailScreen.dart';
+import 'package:cleanup_mobile/NewTaskScreen/PendingtaskDetails.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
@@ -32,22 +28,6 @@ class _PendingTaskkScreenState extends State<PendingTaskkScreen> {
     });
   }
 
-  Future<void> _acceptTaskAndNavigate(String taskId) async {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    // Accept the task
-    await taskProvider.fetchTaskDetails(context, taskId);
-
-    // Navigate to details screen after task acceptance
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            DetailTaskScreen(taskId: int.tryParse(taskId) ?? 0),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +49,8 @@ class _PendingTaskkScreenState extends State<PendingTaskkScreen> {
               final profileImageUrl = task.sharer!.image;
               final imageProvider = (profileImageUrl == null)
                   ? AssetImage('assets/images/image27.png') as ImageProvider
-                  : NetworkImage(profileImageUrl.toString()) as ImageProvider;
+                  : NetworkImage('${task.sharer!.baseUrl}${task.sharer!.image}')
+                      as ImageProvider;
 
               return Card(
                 margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -81,10 +62,16 @@ class _PendingTaskkScreenState extends State<PendingTaskkScreen> {
                   ),
                   title: Text(task.sharer!.name ?? 'No Title'),
                   subtitle: Text(task.sharer?.email ?? 'No Description'),
-                  trailing: ElevatedButton(
-                    onPressed: () {
+                  trailing: InkWell(
+                    onTap: () {
                       final selectedTask = taskProvider.pendingTask[index];
-                      //  navPush(context: context, action: SharTaskDetail(task: task.id.toString(), taskid: '',));
+                      navPush(
+                          context: context,
+                          action: PendingTaskDetailScreen(
+                            task: task,
+                            taskid: task.id.toString(),
+                          ));
+                      //  navPush(context: context, action: SharTaskDetail( taskid: '', task: selectedTask,));
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
@@ -96,7 +83,7 @@ class _PendingTaskkScreenState extends State<PendingTaskkScreen> {
                       // _acceptTaskAndNavigate(task.id
                       //     .toString()); // Ensure task.id is the correct type
                     },
-                    child: Text('Accept'),
+                    child: Text('View'),
                   ),
                 ),
               );
