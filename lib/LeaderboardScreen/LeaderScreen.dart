@@ -1,15 +1,24 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'package:cleanup_mobile/Models/leaderboardModel.dart';
+import 'package:cleanup_mobile/Providers/leaderboardProvider.dart';
+import 'package:cleanup_mobile/Utils/Constant.dart';
+import 'package:cleanup_mobile/Utils/customLoader.dart';
+import 'package:cleanup_mobile/apiServices/apiConstant.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
-import 'package:cleanup_mobile/Utils/AppConstant.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/material.dart';
-
+import 'package:cleanup_mobile/Utils/AppConstant.dart'; // Adjust the import based on your project structure
 import 'package:google_fonts/google_fonts.dart';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Define the LeaderboardProvider
 
 class LeaderBoardScreen extends StatefulWidget {
-  const LeaderBoardScreen({
-    super.key,
-  });
+  const LeaderBoardScreen({super.key});
 
   @override
   State<LeaderBoardScreen> createState() => _LeaderBoardScreenState();
@@ -19,22 +28,17 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
-
-  List<String> pokemons = [
-    'pikachu',
-    'charmander',
-  ];
-  List<String> fruits = [
-    'apple',
-    'banana',
-  ];
-
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // Fetch leaderboard data when the screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<LeaderboardProvider>(context, listen: false)
+          .fetchTasks(context: context);
+    });
   }
 
   @override
@@ -51,9 +55,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
         backgroundColor: const Color.fromARGB(255, 248, 253, 255),
         appBar: AppBar(
             leading: InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => Navigator.pop(context),
                 child: const Icon(Icons.arrow_back)),
             centerTitle: true,
             title: const Text(
@@ -67,9 +69,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
               Padding(
                 padding: const EdgeInsets.only(right: 15),
                 child: InkWell(
-                    onTap: () {
-                      _scaffoldKey.currentState!.openEndDrawer();
-                    },
+                    onTap: () => _scaffoldKey.currentState!.openEndDrawer(),
                     child: Image.asset(
                       'assets/images/image28.png',
                       color: Colors.black,
@@ -86,10 +86,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                   height: 50,
                   decoration: BoxDecoration(
                     color: AppColor.backgroundcontainerColor,
-                    //border: Border.all(color: const Color(0xff323232), width: 2),
-                    borderRadius: BorderRadius.circular(
-                      25.0,
-                    ),
+                    borderRadius: BorderRadius.circular(25.0),
                   ),
                   child: Theme(
                     data: theme.copyWith(
@@ -101,11 +98,8 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                       controller: _tabController,
                       indicatorPadding: const EdgeInsets.all(8),
                       indicatorSize: TabBarIndicatorSize.tab,
-                      // give the indicator a decoration (color and border radius)
                       indicator: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          10.0,
-                        ),
+                        borderRadius: BorderRadius.circular(10.0),
                         color: AppColor.rank1Color,
                       ),
                       labelColor: Colors.white,
@@ -119,29 +113,24 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                         fontWeight: FontWeight.w700,
                       ),
                       tabs: const [
-                        Tab(
-                          text: 'Region',
-                        ),
-                        Tab(
-                          text: 'National',
-                        ),
-                        Tab(
-                          text: 'Global',
-                        ),
+                        Tab(text: 'Region'),
+                        Tab(text: 'National'),
+                        Tab(text: 'Global'),
                       ],
                     ),
                   ),
                 ),
               ),
               Expanded(
-                  child: TabBarView(
-                controller: _tabController,
-                children: [
-                  tabview(),
-                  tabview(),
-                  tabview(),
-                ],
-              ))
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    tabview(context),
+                    tabview(context),
+                    tabview(context),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -171,307 +160,58 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
         ));
   }
 
-  Widget tabview() {
-    List<String> imagePaths = [
-      'assets/images/image35.png',
-      'assets/images/image36.png'
-    ];
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildLeaderboardItem(
-                    height: 180,
-                    rank: 2,
-                    textColor: AppColor.rank2Color,
-                    containerColor: AppColor.backgroundcontainerColor,
-                    dottedBorderColor: AppColor.rank2Color,
-                    imageAssetPath: 'assets/images/image30.png',
-                    imageHeight: 90,
-                    imageWidth: 90,
-                    smallImageAssetPath: 'assets/images/image34.png'),
-                _buildLeaderboardItem(
-                    height: 180,
-                    rank: 1,
-                    textColor: AppColor.rank1Color,
-                    containerColor: AppColor.backgroundcontainerColor,
-                    dottedBorderColor: AppColor.rank1Color,
-                    imageAssetPath: 'assets/images/image37.png',
-                    imageHeight: 90,
-                    imageWidth: 90,
-                    smallImageAssetPath: 'assets/images/image35.png'),
-                _buildLeaderboardItem(
-                    height: 180,
-                    rank: 3,
-                    textColor: AppColor.rank3Color,
-                    containerColor: AppColor.backgroundcontainerColor,
-                    dottedBorderColor: AppColor.rank3Color,
-                    imageAssetPath: 'assets/images/image27.png',
-                    imageHeight: 90,
-                    imageWidth: 90,
-                    smallImageAssetPath: 'assets/images/image36.png')
-              ],
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            Container(
-              color: AppColor.backgroundcontainerColor,
-              padding: EdgeInsets.zero,
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  Container(
-                    padding: EdgeInsets.zero,
-                    color: AppColor.backgroundcontainerColor,
-                    child: Card(
-                      color: AppColor.backgroundcontainerColor,
-                      elevation: 0.1,
-                      child: SizedBox(
-                        height: 75,
-                        child: ListTile(
-                            leading: Image.asset('assets/images/image11.png'),
-                            title: const Text(
-                              '@Username',
-                              style: TextStyle(
-                                  color: Color.fromARGB(159, 0, 0, 0),
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: const Text('Take the title name'),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  '4222',
-                                  style: TextStyle(
-                                      color: AppColor.rank1Color,
-                                      // fontWeight: FontWeight.bold,
-                                      fontSize: 13),
-                                ),
-                                Icon(
-                                  Icons.arrow_drop_down_sharp,
-                                  size: 40,
-                                  color: Colors.blue.shade200,
-                                )
-                              ],
-                            )),
-                      ),
-                    ),
-                  ),
-                  Card(
-                    color: AppColor.backgroundcontainerColor,
-                    elevation: 0.1,
-                    child: SizedBox(
-                      height: 75,
-                      child: ListTile(
-                          leading: Image.asset('assets/images/image11.png'),
-                          title: const Text(
-                            '@Username',
-                            style: TextStyle(
-                                color: Color.fromARGB(159, 0, 0, 0),
-                                fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: const Text('Take the title name'),
-                          trailing: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '4222',
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                              Icon(
-                                Icons.arrow_drop_down_sharp,
-                                size: 40,
-                                color: Colors.red,
-                              )
-                            ],
-                          )),
-                    ),
-                  ),
-                  Card(
-                    color: AppColor.backgroundcontainerColor,
-                    elevation: 0.1,
-                    child: SizedBox(
-                      height: 75,
-                      child: ListTile(
-                          leading: Image.asset('assets/images/image11.png'),
-                          title: const Text(
-                            '@Username',
-                            style: TextStyle(
-                                color: Color.fromARGB(159, 0, 0, 0),
-                                fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: const Text('Take the title name'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                '4222',
-                                style: TextStyle(
-                                    color: AppColor.rank1Color,
-                                    // fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                              Icon(
-                                Icons.arrow_drop_down_sharp,
-                                size: 40,
-                                color: Colors.blue.shade200,
-                              )
-                            ],
-                          )),
-                    ),
-                  ),
-                  Card(
-                    color: AppColor.backgroundcontainerColor,
-                    elevation: 0.1,
-                    child: SizedBox(
-                      height: 75,
-                      child: ListTile(
-                          leading: Image.asset('assets/images/image11.png'),
-                          title: const Text(
-                            '@Username',
-                            style: TextStyle(
-                                color: Color.fromARGB(159, 0, 0, 0),
-                                fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: const Text('Take the title name'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                '4222',
-                                style: TextStyle(
-                                    color: AppColor.rank1Color,
-                                    //fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                              Icon(
-                                Icons.arrow_drop_down_sharp,
-                                size: 40,
-                                color: Colors.blue.shade200,
-                              )
-                            ],
-                          )),
-                    ),
-                  ),
-                ],
+  Widget tabview(BuildContext context) {
+    return Consumer<LeaderboardProvider>(
+      builder: (context, provider, child) {
+        if (provider.getLeaderboard.isEmpty) {
+          return Center(child: Text('No leaderboard data available.'));
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            bool isWideScreen = constraints.maxWidth > 600;
+
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isWideScreen ? 3 : 1,
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
               ),
-            )
-          ],
-        ),
-      ),
+              itemCount: provider.getLeaderboard.length,
+              itemBuilder: (context, index) {
+                var leaderboardItem = provider.getLeaderboard[index];
+                return _buildLeaderboardItem(
+                  height: isWideScreen ? 200 : 150,
+                  rank: index + 1,
+                  textColor: _getRankColor(index + 1),
+                  containerColor: AppColor.backgroundcontainerColor,
+                  dottedBorderColor: _getRankColor(index + 1),
+                  imageAssetPath: 'assets/images/image30.png',
+                  imageWidth: 90,
+                  imageHeight: 90,
+                  smallImageAssetPath: 'assets/images/image34.png',
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
-  // Widget _buildLeaderboardItem({
-  //   required int height,
-  //   required int rank,
-  //   required Color textColor,
-  //   required Color containerColor,
-  //   required Color dottedBorderColor,
-  // }) {
-  //   return SizedBox(
-  //     height: height.toDouble(),
-  //     width: 117,
-  //     child: Stack(
-  //       children: [
-  //         Positioned(
-  //           top: 0,
-  //           left: 12,
-  //           child: Card(
-  //             elevation: 10,
-  //             child: Container(
-  //               width: 117,
-  //               height: 154,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.green,
-  //                 // color: containerColor,
-  //                 borderRadius: BorderRadius.circular(10),
-  //               ),
-  //               child: Padding(
-  //                 padding: const EdgeInsets.only(top: 100),
-  //                 child: Column(
-  //                   // mainAxisAlignment: MainAxisAlignment.center,
-  //                   crossAxisAlignment: CrossAxisAlignment.center,
-  //                   children: [
-  //                     const Text(
-  //                       '@username',
-  //                       style: TextStyle(color: AppColor.leaderboardtextColor),
-  //                     ),
-  //                     Text(
-  //                       '12345678',
-  //                       style: TextStyle(color: textColor),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //         Positioned(
-  //           // bottom: 0,
-  //           top: 10,
-  //           left: 21,
-  //           child: DottedBorder(
-  //             color: dottedBorderColor,
-  //             strokeWidth: 1,
-  //             borderType: BorderType.Circle,
-  //             child: Container(
-  //               width: 90,
-  //               height: 90,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.green,
-  //                 borderRadius: BorderRadius.circular(100),
-  //               ),
-  //               child: Stack(
-  //                 children: [
-  //                   Image.asset(
-  //                     'assets/images/image11.png',
-  //                     fit: BoxFit.contain,
-  //                     height: double.infinity,
-  //                     width: double.infinity,
-  //                   ),
-  //                   Positioned(
-  //                     left: 30,
-  //                     top: 65,
-  //                     child: Container(
-  //                       height: 30,
-  //                       width: 30,
-  //                       decoration: BoxDecoration(
-  //                         color: textColor,
-  //                         borderRadius: const BorderRadius.only(
-  //                           bottomLeft: Radius.circular(105),
-  //                           bottomRight: Radius.circular(105),
-  //                         ),
-  //                       ),
-  //                       child: Center(
-  //                         child: Text(
-  //                           rank.toString(),
-  //                           style: const TextStyle(
-  //                             color: Colors.white,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 1:
+        return AppColor.rank1Color;
+      case 2:
+        return AppColor.rank2Color;
+      case 3:
+        return AppColor.rank3Color;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildLeaderboardItem({
     required int height,
     required int rank,
@@ -481,13 +221,12 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
     required String imageAssetPath,
     required double imageWidth,
     required double imageHeight,
-    required String smallImageAssetPath, // Add this parameter
+    required String smallImageAssetPath,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: SizedBox(
         height: height.toDouble(),
-        width: 117,
         child: Stack(
           children: [
             Positioned.fill(
@@ -504,8 +243,8 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const Text(
-                          '@username',
+                        Text(
+                          '@username $rank',
                           style: TextStyle(color: Colors.black),
                         ),
                         Text(
@@ -549,7 +288,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                             shape: BoxShape.circle,
                           ),
                           child: Image.asset(
-                            smallImageAssetPath, // Use the small image path here
+                            smallImageAssetPath,
                             fit: BoxFit.contain,
                             width: double.infinity,
                             height: double.infinity,
@@ -567,25 +306,4 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
       ),
     );
   }
-}
-
-class MirroredWaterDropClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(size.width / 2, size.height);
-    path.quadraticBezierTo(
-        size.width * 0.75, size.height * 0.8, size.width, size.height * 0.5);
-    path.quadraticBezierTo(
-        size.width * 0.75, size.height * 0.2, size.width / 2, 0);
-    path.quadraticBezierTo(
-        size.width * 0.25, size.height * 0.2, 0, size.height * 0.5);
-    path.quadraticBezierTo(
-        size.width * 0.25, size.height * 0.8, size.width / 2, size.height);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

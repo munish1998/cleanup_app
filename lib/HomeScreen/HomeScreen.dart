@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await taskProvider.getMyTaskList(context: context);
     await taskProvider.fetchIncomingTasks('new');
     await taskProvider.fetchPendingTasks('pending');
-    taskProvider.getToken(); // Adjust status as needed
+    // taskProvider.getToken(); // Adjust status as needed
   }
 
   Future<void> _onRefresh() async {

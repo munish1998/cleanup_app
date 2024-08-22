@@ -38,6 +38,7 @@ class ApiServices {
   static const String getrequestsendList = '${baseUrl}/api/auth/sent-requests';
   static const String getsharetaskList =
       '${baseUrl}/api/auth/task/shared-task-users';
+  static const String getLeaderboard = '${baseUrl}/api/auth/leaderboard';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String levels = '${baseUrl}user/levels';
   static const String exercises = '${baseUrl}user/exercises';
@@ -51,7 +52,7 @@ class ApiServices {
   static const String getUsersProfile = '${baseUrl}user/user_profile';
   static const String getRewards = '${baseUrl}user/rewards';
   static const String getQueries = '${baseUrl}user/enquiry_types';
-  static const String getLeaderboard = '${baseUrl}user/leaderboard';
+  // static const String getLeaderboard = '${baseUrl}user/leaderboard';
   static const String getPersonalizeCard = '${baseUrl}user/personlized_cards';
   static const String getLocation = '${baseUrl}user/locations';
   static const String getNotification = '${baseUrl}user/notifications';

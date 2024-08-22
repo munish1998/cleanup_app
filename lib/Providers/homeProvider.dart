@@ -82,6 +82,50 @@ class TaskProviders with ChangeNotifier {
   int _taskCount = 0;
   int get taskCount => _taskCount;
 
+  Future<void> getsharetaskList({
+    required BuildContext context,
+    required String taskId, // Add taskId as a required parameter
+  }) async {
+    // Build the URL with the taskId as a query parameter
+    var url = Uri.parse('${ApiServices.getsharetaskList}?task_id=$taskId');
+
+    // Retrieve the access token from SharedPreferences
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    // Create headers with Authorization
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      // Make the GET request with headers
+      final response = await http.get(url, headers: headers);
+
+      log('Response of share task: ${response.body}');
+      log('Access token: ${pref.getString(accessTokenKey).toString()}');
+
+      if (response.statusCode == 200) {
+        // Parse the response body as a list of task objects
+        List<dynamic> taskList = jsonDecode(response.body);
+
+        _sharetasklist = taskList
+            .map((taskData) => ShareTaskModel.fromJson(taskData))
+            .toList();
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        // Handle server error
+        _sharetasklist = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _sharetasklist = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
   Future<void> fetchTaskCount(String taskId) async {
     final String url =
         '${ApiServices.baseUrl}/api/auth/task/shared-count/$taskId';
@@ -317,49 +361,6 @@ class TaskProviders with ChangeNotifier {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
       );
-    }
-  }
-
-  Future<void> getsharetaskList({
-    required BuildContext context,
-  }) async {
-    var url = Uri.parse(ApiServices.getsharetaskList);
-
-    // Retrieve the access token from SharedPreferences
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-
-    // Create headers with Authorization
-    Map<String, String> headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      // Make the GET request with headers
-      final response = await http.get(url, headers: headers);
-
-      // log('Response status: ${response.statusCode}');
-      log('Response of share task: ${response.body}');
-      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
-      if (response.statusCode == 200) {
-        // Parse the response body as a list of user objects
-        List<dynamic> userList = jsonDecode(response.body);
-
-        _sharetasklist = userList
-            .map((userData) => ShareTaskModel.fromJson(userData))
-            .toList();
-        //   log('userlist response ====>>>>$_allUser');
-        notifyListeners(); // Notify listeners if using Provider
-      } else {
-        // Handle server error
-        _sharetasklist = [];
-        customToast(context: context, msg: 'Server error', type: 0);
-      }
-    } catch (e) {
-      log('Error: $e');
-      _sharetasklist = [];
-      customToast(context: context, msg: 'An error occurred', type: 0);
     }
   }
 

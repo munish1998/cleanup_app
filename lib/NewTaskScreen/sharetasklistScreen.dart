@@ -22,7 +22,7 @@ class _ShareTaskScreenState extends State<ShareTaskScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskProviders>(context, listen: false)
-          .getsharetaskList(context: context);
+          .getsharetaskList(context: context, taskId: '');
     });
   }
 

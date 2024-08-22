@@ -1,5 +1,7 @@
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
@@ -37,10 +39,7 @@ class _PendingListScreenState extends State<PendingListScreen> {
       //  Navigate to ShareTaskScreen upon success
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => ShareTask(
-                  tasktitle: '',
-                )),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } catch (e) {
       // Handle any errors that occur during acceptance
@@ -52,8 +51,9 @@ class _PendingListScreenState extends State<PendingListScreen> {
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .declineFriendRequest(context: context, requestId: requestId);
+      navPush(context: context, action: HomeScreen());
       // Optionally refresh the pending requests list
-      _fetchPendingRequests();
+      //  _fetchPendingRequests();
     } catch (e) {
       // Handle any errors that occur during declination
       print('Error declining friend request: $e');

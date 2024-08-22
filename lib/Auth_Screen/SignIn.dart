@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:async';
 import 'package:cleanup_mobile/Auth_Screen/Register.dart';
@@ -5,8 +6,10 @@ import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
+import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/authProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
@@ -609,7 +612,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> onLogin() async {
     var pro = Provider.of<AuthProvider>(context, listen: false);
-    var data = {};
 
     if (pro.emailController.text.isEmpty) {
       customToast(context: context, msg: 'Email ID required', type: 0);
@@ -631,12 +633,40 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (loginSuccessful) {
         customToast(context: context, msg: 'Login successful', type: 0);
+
+        // Update device token after login
+        String deviceToken = pro.token; // Retrieve the actual device token
+        await pro.updateDeviceToken(deviceToken);
+        log('login device token ===>>>$deviceToken');
         navPushRemove(context: context, action: HomeScreen());
       } else {
         customToast(context: context, msg: 'Incorrect login details', type: 0);
       }
     }
   }
+
+  // Future<void> updateDeviceToken(String deviceToken) async {
+  //   var url = ApiServices.updatedeviceToken; // Replace with actual base URL
+  //   var data = {
+  //     'device_token': deviceToken,
+  //   };
+
+  //   try {
+  //     var response = await http.post(
+  //       Uri.parse(url),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode(data),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //    //   log('Device token updated successfully====>>>$deviceToken');
+  //     } else {
+  //     //  log('Failed to update device token');
+  //     }
+  //   } catch (error) {
+  //     log('Error updating device token: $error');
+  //   }
+  // }
 
   void onForgetpassword() async {
     var pro = Provider.of<AuthProvider>(context, listen: false);

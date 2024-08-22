@@ -114,8 +114,121 @@ class AuthProvider with ChangeNotifier {
     _isOTP = false;
   }
 
-  void getToken() async {
-    _token = (await FirebaseMessaging.instance.getToken())!;
+  Future<String> getToken() async {
+    String token = await FirebaseMessaging.instance.getToken() ?? '';
+    log('_token response ====>>>$token');
+    _token = token; // Store it if needed globally
+    return token;
+  }
+
+  Future<bool> login({
+    required BuildContext context,
+    required Map<String, String> data,
+  }) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    var url = Uri.parse(ApiServices.login);
+    _isLogin = false;
+
+    // Ensure that _token is not empty before proceeding
+    if (_token.isEmpty) {
+      log('Device token is empty');
+      await getToken(); // Try getting the token again
+    }
+
+    data['device_token'] = _token;
+    log('Device token being sent: $_token');
+
+    showLoaderDialog(context, 'Please wait...');
+    final response =
+        await ApiClient().postData(context: context, url: url, body: data);
+
+    log('Login response status code: ${response.statusCode}');
+    log('Login response body: ${response.body}');
+
+    navPop(context: context);
+
+    if (response.statusCode == 200) {
+      try {
+        var result = jsonDecode(response.body);
+
+        log('Parsed response: $result');
+
+        if (result.containsKey('access_token')) {
+          pref.setBool(isUserLoginKey, true);
+          pref.setString(accessTokenKey, result['access_token']);
+          pref.setString(userIdKey, result['user']['id'].toString());
+
+          log('Stored access token: ${pref.getString(accessTokenKey)}');
+          log('Stored user ID: ${pref.getString(userIdKey)}');
+
+          _isLogin = true;
+          notifyListeners();
+
+          await updateDeviceToken(
+              _token); // Update the device token after login
+
+          return true; // Login successful
+        } else {
+          customToast(
+              context: context,
+              msg: result['message'] ?? 'Login failed',
+              type: 0);
+          _isLogin = false;
+          notifyListeners();
+          return false; // Login failed
+        }
+      } catch (e) {
+        log('Error parsing response: $e');
+        customToast(
+            context: context,
+            msg: 'An error occurred while processing the response',
+            type: 0);
+        _isLogin = false;
+        notifyListeners();
+        return false; // Login failed
+      }
+    } else {
+      log('Error response status code: ${response.statusCode}');
+      customToast(
+          context: context,
+          msg: 'Server error: ${response.statusCode}',
+          type: 0);
+      _isLogin = false;
+      notifyListeners();
+      return false; // Login failed
+    }
+  }
+
+  Future<void> updateDeviceToken(String deviceToken) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(
+        accessTokenKey); // Retrieve the access token from SharedPreferences
+
+    var url = ApiServices.updatedeviceToken; // Replace with the actual API URL
+
+    var data = {
+      'device_token': deviceToken, // Use the provided deviceToken
+    };
+
+    try {
+      var response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer $accessToken', // Add the authorization header with the Bearer token
+        },
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        log('Device token updated successfully: $deviceToken');
+      } else {
+        log('Failed to update device token. Status code: ${response.statusCode}');
+      }
+    } catch (error) {
+      log('Error updating device token: $error');
+    }
   }
 
   void clear() async {
@@ -324,79 +437,6 @@ class AuthProvider with ChangeNotifier {
       customToast(context: context, msg: 'SignUp Error: $e', type: 0);
     } finally {
       navPop(context: context); // Close the loader dialog
-    }
-  }
-
-  Future<bool> login(
-      {required BuildContext context,
-      required Map<String, String> data}) async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var url = Uri.parse(ApiServices.login);
-    _isLogin = false;
-
-    showLoaderDialog(context, 'Please wait...');
-    final response =
-        await ApiClient().postData(context: context, url: url, body: data);
-
-    // Log the response details
-    log('Login response status code: ${response.statusCode}');
-    log('Login response body: ${response.body}');
-
-    navPop(context: context);
-
-    if (response.statusCode == 200) {
-      try {
-        var result = jsonDecode(response.body);
-
-        // Log the parsed response
-        log('Parsed response: $result');
-
-        if (result.containsKey('access_token')) {
-          // Save values in SharedPreferences
-          pref.setBool(isUserLoginKey, true);
-          pref.setString(accessTokenKey, result['access_token']);
-          pref.setString(
-              userIdKey,
-              result['user']['id']
-                  .toString()); // Ensure user ID is stored as a string
-
-          // Log stored values
-          log('Stored access token: ${pref.getString(accessTokenKey)}');
-          log('Stored user ID: ${pref.getString(userIdKey)}');
-          log('check logged===>>>>${pref.setBool(isUserLoginKey, true)}');
-
-          _isLogin = true;
-          notifyListeners();
-          return true; // Login successful
-        } else {
-          // Handle missing access token
-          customToast(
-              context: context,
-              msg: result['message'] ?? 'Login failed',
-              type: 0);
-          _isLogin = false;
-          notifyListeners();
-          return false; // Login failed
-        }
-      } catch (e) {
-        log('Error parsing response: $e');
-        customToast(
-            context: context,
-            msg: 'An error occurred while processing the response',
-            type: 0);
-        _isLogin = false;
-        notifyListeners();
-        return false; // Login failed
-      }
-    } else {
-      log('Error response status code: ${response.statusCode}');
-      customToast(
-          context: context,
-          msg: 'Server error: ${response.statusCode}',
-          type: 0);
-      _isLogin = false;
-      notifyListeners();
-      return false; // Login failed
     }
   }
 

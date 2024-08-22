@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:developer';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
@@ -323,11 +324,11 @@ class _ShareTaskState extends State<ShareTask> {
         description: description,
         beforeImage: _beforeImage!,
         afterImage: _afterImage!,
-        sharetaskID: "31",
+        sharetaskID: taskProvider.comingTask.first.id.toString(),
         status: '2');
 
     if (success) {
-      navPush(context: context, action: LoginScreen());
+      navPush(context: context, action: HomeScreen());
       //  _showShareOptionsBottomSheet(context);
     } else {
       _showErrorSnackbar(context, 'Failed to create task.');

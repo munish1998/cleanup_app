@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:cleanup_mobile/Models/sharetaskModel.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -110,11 +112,13 @@ class DetailTaskScreen extends StatefulWidget {
 class _DetailTaskScreenState extends State<DetailTaskScreen> {
   Taskk? _task;
   bool _isLoading = true;
+  List<ShareTaskModel> _shareTaskList = [];
 
   @override
   void initState() {
     super.initState();
     _fetchTaskDetails();
+    _fetchShareTaskList(); // Fetch the shared task list
   }
 
   Future<void> _fetchTaskDetails() async {
@@ -159,53 +163,16 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     }
   }
 
-  Future<void> _acceptTaskAndNavigate(String taskId) async {
+  Future<void> _fetchShareTaskList() async {
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    try {
-      await taskProvider.fetchTaskDetails(context, taskId, 'pending');
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShareTask(
-            tasktitle: taskProvider.comingTask.first.task!.title.toString(),
-          ),
-        ),
-      );
-    } catch (error) {
-      _showError('Failed to accept task');
-    }
-  }
-
-  Future<void> _declineTaskAndNavigate(String taskId) async {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    try {
-      await taskProvider.declinetaskRequest(context, taskId, 'cancelled');
-
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => ShareTask(),
-      //   ),
-      // );
-    } catch (error) {
-      _showError('Failed to decline task');
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+    await taskProvider.getsharetaskList(
+      context: context,
+      taskId: widget.taskId.toString(),
     );
-  }
-
-  void _logImageUrls() {
-    if (_task != null) {
-      log('Before Image URL: ${_task!.beforeImageUrl}');
-      log('After Image URL: ${_task!.afterImageUrl}');
-    }
+    setState(() {
+      _shareTaskList = taskProvider.sharetasklist;
+    });
+    log('Shared Task List: ${_shareTaskList.length}');
   }
 
   @override
@@ -218,142 +185,294 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _task != null
-              ? _buildTaskDetails()
+              ? SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Existing task details UI
+                      _buildTaskDetails(),
+
+                      // New section for shared users
+                      _buildSharedUsersSection(),
+                    ],
+                  ),
+                )
               : Center(child: Text('No task details available')),
     );
   }
 
   Widget _buildTaskDetails() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            color: AppColor.rank1Color,
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height / 6,
-            child: Center(
-              child: Text(
-                'My Task',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Column(
+      children: [
+        Container(
+          color: AppColor.rank1Color,
+          width: double.infinity,
+          height: MediaQuery.of(context).size.height / 6,
+          child: Center(
+            child: Text(
+              'My Task',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(
-                    _task?.user.username ?? 'https://via.placeholder.com/150',
+        ),
+        Container(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 50,
+                backgroundImage: NetworkImage(
+                  _task?.user.username ?? 'https://via.placeholder.com/150',
+                ),
+                backgroundColor: Colors.grey[300],
+              ),
+              SizedBox(height: 16.0),
+              Text(
+                _task?.user.name ?? 'Username',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.all(16.0),
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  _task?.title ?? 'Title',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  _task?.description ?? 'Description',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: _task?.beforeImageUrl.isNotEmpty == true
+                          ? Image.network(
+                              _task!.beforeImageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  'assets/images/default_image.png',
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              'assets/images/default_image.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
                   ),
-                  backgroundColor: Colors.grey[300],
+                  SizedBox(width: 16.0),
+                  Expanded(
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: _task?.afterImageUrl.isNotEmpty == true
+                          ? Image.network(
+                              _task!.afterImageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  'assets/images/default_image.png',
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              'assets/images/default_image.png',
+                              fit: BoxFit.cover,
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.0),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
-                SizedBox(height: 16.0),
-                Text(
-                  _task?.user.name ?? 'Username',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                child: Text(
+                  'Status: ${_task?.status ?? 'Unknown'}',
+                  style: TextStyle(fontSize: 16),
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSharedUsersSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Shared Users',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(16.0),
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Text(
-                    _task?.title ?? 'Title',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Text(
-                    _task?.description ?? 'Description',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-                SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: _task?.beforeImageUrl.isNotEmpty == true
-                            ? Image.network(
-                                _task!.beforeImageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Image.asset(
-                                    'assets/images/default_image.png',
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              )
-                            : Image.asset(
-                                'assets/images/default_image.png',
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                    SizedBox(width: 16.0),
-                    Expanded(
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: _task?.afterImageUrl.isNotEmpty == true
-                            ? Image.network(
-                                _task!.afterImageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Image.asset(
-                                    'assets/images/default_image.png',
-                                    fit: BoxFit.cover,
-                                  );
-                                },
-                              )
-                            : Image.asset(
-                                'assets/images/default_image.png',
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16.0),
-              ],
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: _shareTaskList.length,
+          itemBuilder: (context, index) {
+            final shareTask = _shareTaskList[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(shareTask.user!.image.toString()),
+              ),
+              title: Text(shareTask.user!.name.toString()),
+              subtitle: Text(shareTask.status.toString()),
+              trailing: _getStatusIcon(shareTask.status.toString()),
+            );
+          },
+        ),
+        _buildShareTaskButton(), // Add the Share Task button based on conditions
+      ],
+    );
+  }
+
+  Widget _buildShareTaskButton() {
+    // Check if the shared user count is less than 3
+    if (_shareTaskList.length < 3) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Center(
+          child: ElevatedButton(
+            onPressed: () {
+              navPush(
+                  context: context,
+                  action: FriendTaskScreen(taskid: widget.taskId.toString()));
+            },
+            child: Text('Share Task'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.rank1Color, // Button color
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
+        ),
+      );
+    } else {
+      // If the shared user count is 3 or more, do not show the Share Task button
+      return Container();
+    }
+  }
+
+  Widget _buildImageComparison({
+    required String beforeImageUrl,
+    required String afterImageUrl,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildImageTile(beforeImageUrl, 'Before'),
+        _buildImageTile(afterImageUrl, 'After'),
+      ],
+    );
+  }
+
+  Widget _buildImageTile(String imageUrl, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/images/default_image.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    'assets/images/default_image.png',
+                    fit: BoxFit.cover,
+                  ),
+          ),
+          SizedBox(height: 8.0),
+          Text(label),
         ],
       ),
     );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _logImageUrls() {
+    log('Before Image URL: ${_task?.beforeImageUrl}');
+    log('After Image URL: ${_task?.afterImageUrl}');
+  }
+
+  Icon _getStatusIcon(String status) {
+    switch (status.toLowerCase()) {
+      case 'new':
+        return Icon(Icons.fiber_new, color: Colors.green);
+      case 'pending':
+        return Icon(Icons.hourglass_empty, color: Colors.orange);
+      case 'completed':
+        return Icon(Icons.check_circle, color: Colors.blue);
+      default:
+        return Icon(Icons.error, color: Colors.red);
+    }
   }
 }

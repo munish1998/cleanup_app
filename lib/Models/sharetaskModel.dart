@@ -1,23 +1,43 @@
 class ShareTaskModel {
-  int? taskId;
+  int? id;
+  int? sharerId;
   int? userId;
-  int? taskCount;
+  int? taskId;
+  String? status;
+  String? createdAt;
+  String? updatedAt;
   User? user;
 
-  ShareTaskModel({this.taskId, this.userId, this.taskCount, this.user});
+  ShareTaskModel(
+      {this.id,
+      this.sharerId,
+      this.userId,
+      this.taskId,
+      this.status,
+      this.createdAt,
+      this.updatedAt,
+      this.user});
 
   ShareTaskModel.fromJson(Map<String, dynamic> json) {
-    taskId = json['task_id'];
+    id = json['id'];
+    sharerId = json['sharer_id'];
     userId = json['user_id'];
-    taskCount = json['task_count'];
+    taskId = json['task_id'];
+    status = json['status'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
     user = json['user'] != null ? new User.fromJson(json['user']) : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['task_id'] = this.taskId;
+    data['id'] = this.id;
+    data['sharer_id'] = this.sharerId;
     data['user_id'] = this.userId;
-    data['task_count'] = this.taskCount;
+    data['task_id'] = this.taskId;
+    data['status'] = this.status;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
     if (this.user != null) {
       data['user'] = this.user!.toJson();
     }
@@ -37,10 +57,10 @@ class User {
   String? baseUrl;
   String? location;
   int? terms;
-  String? socialSignup;
+  Null? socialSignup;
   int? isAdmin;
   int? isActive;
-  String? emailVerifiedAt;
+  Null? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
