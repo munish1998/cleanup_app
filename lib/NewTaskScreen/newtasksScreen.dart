@@ -13,9 +13,11 @@ import 'package:cleanup_mobile/Utils/AppConstant.dart'; // Import your constants
 const String baseUrl = 'https://webpristine.com/cleanup/public/';
 
 class UpcomingTaskScreen extends StatefulWidget {
-  final int taskId; // Task ID passed to this screen
+  // final String taskId; // Task ID passed to this screen
 
-  UpcomingTaskScreen({Key? key, required this.taskId}) : super(key: key);
+  UpcomingTaskScreen({
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<UpcomingTaskScreen> createState() => _UpcomingTaskScreenState();

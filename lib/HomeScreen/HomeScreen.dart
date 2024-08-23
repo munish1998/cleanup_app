@@ -134,9 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => UpcomingTaskScreen(
-                                  taskId: taskProvider.mytasklist.first.id,
-                                )),
+                            builder: (context) => UpcomingTaskScreen()),
                       ),
                     ),
                     _buildTaskCard(

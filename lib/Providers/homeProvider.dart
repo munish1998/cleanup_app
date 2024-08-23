@@ -51,9 +51,10 @@ class TaskProviders with ChangeNotifier {
   List<CompleteTaskModel> _mycompletes = [];
   List<CompleteTaskModel> get mycompletes => _mycompletes;
   List<ComingTaskModel> _comingTask = [];
+  List<ComingTaskModel> get comingTask => _comingTask;
   List<PendingTaskModel> _pendingTask = [];
   List<PendingTaskModel> get pendingTask => _pendingTask;
-  List<ComingTaskModel> get comingTask => _comingTask;
+
   TextEditingController _nameController = TextEditingController();
   TextEditingController _locationController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
@@ -420,19 +421,7 @@ class TaskProviders with ChangeNotifier {
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
     }; // Replace with your API URL
-    // try {
-    //   final response = await http.get(Uri.parse(url,headers: headers));
-    //   if (response.statusCode == 200) {
-    //     final jsonResponse = json.decode(response.body);
-    //     _myTaskModel = MyTaskModel.fromJson(jsonResponse);
-    //     log('fetch task response ====>>>>$_myTaskModel');
-    //     notifyListeners();
-    //   } else {
-    //     throw Exception('Failed to load tasks');
-    //   }
-    // } catch (error) {
-    //   print(error); // Handle errors appropriately
-    // }
+
     try {
       final response = await http.get(url, headers: headers);
 
@@ -804,8 +793,8 @@ class TaskProviders with ChangeNotifier {
 
     try {
       final response = await http.post(url, headers: headers);
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
+      // log('Response status: ${response.statusCode}');
+      log('request pending list response ===>>>: ${response.body}');
 
       if (response.statusCode == 200) {
         var responseBody = jsonDecode(response.body);

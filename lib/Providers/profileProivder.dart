@@ -17,24 +17,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ProfileProvider with ChangeNotifier {
   ProfileModel? _myProfile;
   ProfileModel? get myProfile => _myProfile;
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _locationController = TextEditingController();
-
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
-
-  TextEditingController _dobController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-  TextEditingController _cpasswordController = TextEditingController();
-  TextEditingController get nameController => _nameController;
-  TextEditingController get locationController => _locationController;
-
-  TextEditingController get emailController => _emailController;
-  TextEditingController get phoneController => _phoneController;
-
-  TextEditingController get dobController => _dobController;
-  TextEditingController get passwordController => _passwordController;
-  TextEditingController get cpasswordController => _cpasswordController;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController cpasswordController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController dobController = TextEditingController();
   Future<void> getmyProfile({
     required BuildContext context,
   }) async {
@@ -278,5 +267,109 @@ class ProfileProvider with ChangeNotifier {
   Future<String> getAccessToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('access_token') ?? '';
+  }
+
+  String? validateMobile(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your mobile number';
+    }
+    final mobileRegex = RegExp(r'^\d{1,12}$');
+    if (!mobileRegex.hasMatch(value)) {
+      return 'Mobile number should be digits only and up to 12 digits';
+    }
+    return null;
+  }
+
+  String? validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your name';
+    }
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    final emailRegex =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+    return null;
+  }
+
+  String? validateConfirmPassword(String? value, String password) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != password) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  String? validateLocation(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your location';
+    }
+    return null;
+  }
+
+  String? validateDateOfBirth(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your date of birth';
+    }
+    final dobRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+    if (!dobRegex.hasMatch(value)) {
+      return 'Date of birth must be in YYYY-MM-DD format';
+    }
+    try {
+      final parts = value.split('-');
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final day = int.parse(parts[2]);
+
+      if (year < 1900 || year > DateTime.now().year) {
+        return 'Year should be between 1900 and ${DateTime.now().year}';
+      }
+      if (month < 1 || month > 12) {
+        return 'Month should be between 01 and 12';
+      }
+      if (day < 1 || day > 31) {
+        return 'Day should be between 01 and 31';
+      }
+
+      final isLeapYear =
+          (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+      final daysInMonth = [
+        31, // Jan
+        (isLeapYear ? 29 : 28), // Feb
+        31, // Mar
+        30, // Apr
+        31, // May
+        30, // Jun
+        31, // Jul
+        31, // Aug
+        30, // Sep
+        31, // Oct
+        30, // Nov
+        31, // Dec
+      ];
+
+      if (day > daysInMonth[month - 1]) {
+        return 'Invalid day for the given month';
+      }
+    } catch (_) {
+      return 'Invalid date format';
+    }
+    return null;
   }
 }
