@@ -71,16 +71,16 @@ class User {
   String? name;
   String? email;
   String? mobile;
-  Null? dob;
+  String? dob;
   String? image;
-  Null? bgimage;
+  String? bgimage;
   String? baseUrl;
   String? location;
   int? terms;
-  Null? socialSignup;
+  String? socialSignup;
   int? isAdmin;
   int? isActive;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 
@@ -147,7 +147,7 @@ class User {
 }
 
 class Task {
-  int? id;
+  int? id; // Updated from String? to int?
   int? userId;
   int? shareTaskId;
   String? location;
@@ -160,24 +160,25 @@ class Task {
   String? createdAt;
   String? updatedAt;
 
-  Task(
-      {this.id,
-      this.userId,
-      this.shareTaskId,
-      this.location,
-      this.title,
-      this.description,
-      this.before,
-      this.after,
-      this.baseUrl,
-      this.status,
-      this.createdAt,
-      this.updatedAt});
+  Task({
+    this.id,
+    this.userId,
+    this.shareTaskId,
+    this.location,
+    this.title,
+    this.description,
+    this.before,
+    this.after,
+    this.baseUrl,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
+  });
 
   Task.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    userId = json['user_id'];
-    shareTaskId = json['share_task_id'];
+    id = json['id'] as int?; // Ensure correct type
+    userId = json['user_id'] as int?;
+    shareTaskId = json['share_task_id'] as int?;
     location = json['location'];
     title = json['title'];
     description = json['description'];
@@ -219,10 +220,10 @@ class Sharer {
   String? baseUrl;
   String? location;
   int? terms;
-  Null? socialSignup;
+  String? socialSignup;
   int? isAdmin;
   int? isActive;
-  Null? emailVerifiedAt;
+  String? emailVerifiedAt;
   String? updatedAt;
   String? createdAt;
 

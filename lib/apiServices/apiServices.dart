@@ -100,39 +100,39 @@ class ApiClient {
     }
   }
 
-  Future<Map<String, dynamic>> socialLogin({
-    required String email,
-  }) async {
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    final String? token = pref.getString(accessTokenKey); // Retrieve token
+  // Future<Map<String, dynamic>> socialLogin({
+  //   required String email,
+  // }) async {
+  //   final SharedPreferences pref = await SharedPreferences.getInstance();
+  //   final String? token = pref.getString(accessTokenKey); // Retrieve token
 
-    if (token == null) {
-      throw Exception('No access token found');
-    }
+  //   if (token == null) {
+  //     throw Exception('No access token found');
+  //   }
 
-    try {
-      final response = await http.post(
-        Uri.parse(ApiServices.socialLogin), // Ensure this is a valid URL
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          "social_signup": "gmail",
-          "email": email,
-        }),
-      );
+  //   try {
+  //     final response = await http.post(
+  //       Uri.parse(ApiServices.socialLogin), // Ensure this is a valid URL
+  //       headers: {
+  //         'Authorization': 'Bearer $token',
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: jsonEncode({
+  //         "social_signup": "gmail",
+  //         "email": email,
+  //       }),
+  //     );
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      } else {
-        final errorResponse = jsonDecode(response.body) as Map<String, dynamic>;
-        throw Exception('Failed to login: ${errorResponse['message']}');
-      }
-    } catch (error) {
-      throw Exception('Error during social login: $error');
-    }
-  }
+  //     if (response.statusCode == 200) {
+  //       return jsonDecode(response.body) as Map<String, dynamic>;
+  //     } else {
+  //       final errorResponse = jsonDecode(response.body) as Map<String, dynamic>;
+  //       throw Exception('Failed to login: ${errorResponse['message']}');
+  //     }
+  //   } catch (error) {
+  //     throw Exception('Error during social login: $error');
+  //   }
+  // }
 
   Future<http.Response> getDataByToken(
       {required BuildContext context, required Uri uri}) async {

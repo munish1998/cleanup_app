@@ -1,5 +1,6 @@
 import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Screens/SearchScreen/pendingshareTask.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
@@ -165,7 +166,7 @@ class _PendingTaskDetailScreenState extends State<PendingTaskDetailScreen> {
                     onTap: () {
                       navPush(
                           context: context,
-                          action: ShareTask(
+                          action: PendingShareTask(
                             tasktitle: taskDetails.title.toString(),
                           ));
                       //   _acceptTaskAndNavigate(widget.taskid);

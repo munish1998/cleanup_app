@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:cleanup_mobile/NewTaskScreen/PendingtaskDetails.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
@@ -65,6 +66,8 @@ class _PendingTaskkScreenState extends State<PendingTaskkScreen> {
                   trailing: InkWell(
                     onTap: () {
                       final selectedTask = taskProvider.pendingTask[index];
+                      log('pending task id response ===>>>$task');
+                      log('pending taskID ===>>>$task.id.toString()');
                       navPush(
                           context: context,
                           action: PendingTaskDetailScreen(

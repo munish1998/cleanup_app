@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:cleanup_mobile/Models/sharetaskModel.dart';
+import 'package:cleanup_mobile/NewTaskScreen/taskCompleted.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,44 +11,85 @@ import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
-import 'package:cleanup_mobile/Models/comingtaskModel.dart';
-import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 
 class User {
-  final int id;
-  final String username;
-  final String name;
-  final String email;
-  final String mobile;
-  final String location;
-  final int terms;
-  final int isAdmin;
-  final int isActive;
+  int? id;
+  String? username;
+  String? name;
+  String? email;
+  String? mobile;
+  String? dob;
+  String? image;
+  String? bgimage;
+  String? baseUrl;
+  String? location;
+  int? terms;
+  Null? socialSignup;
+  int? isAdmin;
+  int? isActive;
+  Null? emailVerifiedAt;
+  String? updatedAt;
+  String? createdAt;
 
-  User({
-    required this.id,
-    required this.username,
-    required this.name,
-    required this.email,
-    required this.mobile,
-    required this.location,
-    required this.terms,
-    required this.isAdmin,
-    required this.isActive,
-  });
+  User(
+      {this.id,
+      this.username,
+      this.name,
+      this.email,
+      this.mobile,
+      this.dob,
+      this.image,
+      this.bgimage,
+      this.baseUrl,
+      this.location,
+      this.terms,
+      this.socialSignup,
+      this.isAdmin,
+      this.isActive,
+      this.emailVerifiedAt,
+      this.updatedAt,
+      this.createdAt});
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      username: json['username'],
-      name: json['name'],
-      email: json['email'],
-      mobile: json['mobile'],
-      location: json['location'],
-      terms: json['terms'],
-      isAdmin: json['is_admin'],
-      isActive: json['is_active'],
-    );
+  User.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    username = json['username'];
+    name = json['name'];
+    email = json['email'];
+    mobile = json['mobile'];
+    dob = json['dob'];
+    image = json['image'];
+    bgimage = json['bgimage'];
+    baseUrl = json['base_url'];
+    location = json['location'];
+    terms = json['terms'];
+    socialSignup = json['social_signup'];
+    isAdmin = json['is_admin'];
+    isActive = json['is_active'];
+    emailVerifiedAt = json['email_verified_at'];
+    updatedAt = json['updated_at'];
+    createdAt = json['created_at'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['username'] = this.username;
+    data['name'] = this.name;
+    data['email'] = this.email;
+    data['mobile'] = this.mobile;
+    data['dob'] = this.dob;
+    data['image'] = this.image;
+    data['bgimage'] = this.bgimage;
+    data['base_url'] = this.baseUrl;
+    data['location'] = this.location;
+    data['terms'] = this.terms;
+    data['social_signup'] = this.socialSignup;
+    data['is_admin'] = this.isAdmin;
+    data['is_active'] = this.isActive;
+    data['email_verified_at'] = this.emailVerifiedAt;
+    data['updated_at'] = this.updatedAt;
+    data['created_at'] = this.createdAt;
+    return data;
   }
 }
 
@@ -177,6 +219,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final taskProvider = Provider.of<TaskProviders>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Task Details'),
@@ -210,7 +253,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
           height: MediaQuery.of(context).size.height / 6,
           child: Center(
             child: Text(
-              'My Task',
+              _task!.title,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -225,9 +268,12 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
             children: [
               CircleAvatar(
                 radius: 50,
-                backgroundImage: NetworkImage(
-                  _task?.user.username ?? 'https://via.placeholder.com/150',
-                ),
+                backgroundImage: (_task!.user.image != null &&
+                        _task!.user.image!.isNotEmpty)
+                    ? NetworkImage(
+                        '${_task!.user.baseUrl.toString()}${_task!.user.image.toString()}',
+                      )
+                    : AssetImage('assets/images/image30.png') as ImageProvider,
                 backgroundColor: Colors.grey[300],
               ),
               SizedBox(height: 16.0),
@@ -324,19 +370,6 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 16.0),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Text(
-                  'Status: ${_task?.status ?? 'Unknown'}',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
             ],
           ),
         ),
@@ -364,16 +397,58 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
           itemCount: _shareTaskList.length,
           itemBuilder: (context, index) {
             final shareTask = _shareTaskList[index];
+            final taskProvider =
+                Provider.of<TaskProviders>(context, listen: false);
+
+            // Check if user and image details are available
+            final imageUrl = shareTask.user?.image;
+            final imageToShow = (imageUrl != null && imageUrl.isNotEmpty)
+                ? NetworkImage('${shareTask.user?.baseUrl}$imageUrl')
+                : AssetImage('assets/images/image30.png') as ImageProvider;
+
             return ListTile(
               leading: CircleAvatar(
-                backgroundImage: NetworkImage(shareTask.user!.image.toString()),
+                backgroundImage: imageToShow,
               ),
-              title: Text(shareTask.user!.name.toString()),
-              subtitle: Text(shareTask.status.toString()),
-              trailing: _getStatusIcon(shareTask.status.toString()),
+              title: Text(shareTask.user?.email ?? 'No email'),
+              subtitle: Text(shareTask.status ?? 'No status'),
+              trailing: InkWell(
+                onTap: () {
+                  switch (shareTask.status?.toLowerCase()) {
+                    case 'new':
+                      // Handle 'new' status if needed
+                      break;
+                    case 'pending':
+                      // Handle 'pending' status if needed
+                      break;
+                    case 'completed':
+                      // Ensure `widget.taskId` is defined in your widget state
+                      log('task response ==>>>${taskProvider.mycompletes.first}');
+                      log('task response ==>>>${widget.taskId}');
+                      navPush(
+                          context: context,
+                          action: CompleteSharTaskDetails(
+                            task: shareTask,
+                            taskid: shareTask.id.toString(),
+                          ));
+                      // navPush(
+                      //   context: context,
+                      //   action: ShareTaskDetail(
+                      //     taskid: '191',
+                      //     shareTask: shareTask,
+                      //   ),
+                      // );
+                      break;
+                    default:
+                      _showError('Unknown status');
+                  }
+                },
+                child: getStatusIcon(shareTask.status ?? 'Unknown'),
+              ),
             );
           },
         ),
+
         _buildShareTaskButton(), // Add the Share Task button based on conditions
       ],
     );
@@ -463,7 +538,7 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
     log('After Image URL: ${_task?.afterImageUrl}');
   }
 
-  Icon _getStatusIcon(String status) {
+  Icon getStatusIcon(String status) {
     switch (status.toLowerCase()) {
       case 'new':
         return Icon(Icons.fiber_new, color: Colors.green);

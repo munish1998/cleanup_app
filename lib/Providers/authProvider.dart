@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'package:cleanup_mobile/Models/userDetails.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Models/userModel.dart';
 import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:cleanup_mobile/apiServices/apiServices.dart';
 import 'package:firebase_auth/firebase_auth.dart ' as fa;
+import 'package:firebase_auth/firebase_auth.dart%20';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
@@ -18,11 +20,11 @@ import '../utils/customLoader.dart';
 import '/utils/commonMethod.dart';
 
 class AuthProvider with ChangeNotifier {
-  Userdetails? userDetail;
+  // Userdetails? userDetail;
   final fa.FirebaseAuth _auth = fa.FirebaseAuth.instance;
   final GoogleSignIn googleSignIn = GoogleSignIn();
-  List<Userdetails> _pending = [];
-  List<Userdetails> get pending => _pending;
+  // List<Userdetails> _pending = [];
+  //List<Userdetails> get pending => _pending;
   String _address = '';
   bool isloading = false;
   String get address => _address;
@@ -244,46 +246,170 @@ class AuthProvider with ChangeNotifier {
     nCPassController.clear();
   }
 
-  Future<fa.User?> handleSignIn({required BuildContext context}) async {
-    try {
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final fa.AuthCredential credential = fa.GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
+  Future<void> googleLogin(BuildContext context) async {
+    print("googleLogin method Called");
+    GoogleSignIn _googleSignIn = GoogleSignIn();
 
-        final fa.UserCredential authResult =
-            await _auth.signInWithCredential(credential);
-        final fa.User? user = authResult.user;
-        socialLogin(
-            context: context,
-            email: 'munishrai.mr1998@gmail.com',
-            username: 'yy6734',
-            name: 'anujj',
-            mobileNumber: '12288156789',
-            password: '12345678',
-            social_signup: 'gmail',
-            is_admin: '0',
-            confirmPassword: '12345678');
-        // Navigator.of(context).pushAndRemoveUntil(
-        //   MaterialPageRoute(
-        //     builder: (context) => const CompanyInfoScreen(),
-        //   ),
-        //   (route) => false,
-        // );
-        return user;
+    try {
+      final GoogleSignInAccount? result = await _googleSignIn.signIn();
+      if (result == null) {
+        print("Sign-in failed or user cancelled");
+        return;
+      }
+
+      final GoogleSignInAuthentication userData = await result.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: userData.accessToken,
+        idToken: userData.idToken,
+      );
+
+      final UserCredential finalResult =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = finalResult.user;
+
+      if (user != null) {
+        log("User signed in: ${user.displayName}");
+        log("User email: ${user.email}");
+        log("User photo URL: ${user.photoURL}");
+
+        // Save the token to SharedPreferences
+        if (userData.accessToken != null) {
+          await saveTokenToSharedPreferences(userData.accessToken!);
+        }
+
+        // Call socialSignup API with the user's details
+        try {
+          final Map<String, dynamic> socialSignupResponse = await socialSignup(
+            username: user.displayName ?? '',
+            name: user.displayName ?? '',
+            terms: '1',
+            email: user.email!,
+            mobile: '1234567890', // Adjust if mobile number is available
+            isAdmin: '0', // Adjust according to your requirements
+            socialSignup: 'gmail',
+          );
+          log("Social signup API response: $socialSignupResponse");
+
+          // Check if socialSignup was successful before proceeding
+          if (socialSignupResponse['status'] == 'success') {
+            // Call socialLogin API with the user's email
+            final Map<String, dynamic> socialLoginResponse = await socialLogin(
+              email: user.email!,
+            );
+            log("Social login API response: $socialLoginResponse");
+
+            // Navigate to HomeScreen if login is successful
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+            );
+          } else {
+            // Handle the case where socialSignup fails
+            log("Social signup failed: ${socialSignupResponse['message']}");
+            // Show error message to the user if needed
+          }
+        } catch (signupError) {
+          log("Error during social signup: $signupError");
+          // Handle signup error, e.g., show an error message to the user
+        }
       }
     } catch (error) {
-      log("Error signing in: $error");
+      print("Error during Google sign-in: $error");
+      // Handle Google sign-in error, e.g., show an error message to the user
     }
-
-    return null;
   }
 
-  Future<void> socialLogin({
+  Future<Map<String, dynamic>> socialSignup({
+    required String username,
+    required String name,
+    required String email,
+    required String terms,
+    required String mobile,
+    required String isAdmin,
+    required String socialSignup,
+  }) async {
+    final String? token = await getTokenFromSharedPreferences();
+    log('token response ===>>>$token');
+
+    try {
+      final response = await http.post(
+        Uri.parse(ApiServices.socialSignup),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'Bearer $token', // Include token if required by your API
+        },
+        body: jsonEncode({
+          "username": username,
+          "terms": terms,
+          "name": name,
+          "email": email,
+          "mobile": mobile,
+          "is_admin": isAdmin,
+          "social_signup": socialSignup,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        final errorResponse = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception(
+            'Failed to sign up: ${errorResponse['message'] ?? 'Unknown error'}');
+      }
+    } catch (error) {
+      log("Error during social signup: $error");
+      throw Exception('Error during social signup: $error');
+    }
+  }
+
+  Future<void> saveTokenToSharedPreferences(String token) async {
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    await pref.setString('accessTokenKey', token);
+  }
+
+  Future<void> logoutt() async {
+    await GoogleSignIn().disconnect();
+    FirebaseAuth.instance.signOut();
+  }
+
+  Future<String?> getTokenFromSharedPreferences() async {
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    return pref.getString(
+        'accessTokenKey'); // Replace 'accessTokenKey' with your actual key
+  }
+
+  Future<Map<String, dynamic>> socialLogin({required String email}) async {
+    final String? token = await getTokenFromSharedPreferences();
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(ApiServices.socialLogin),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          "social_signup": "gmail",
+          "email": email,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      } else {
+        final errorResponse = jsonDecode(response.body) as Map<String, dynamic>;
+        throw Exception('Failed to login: ${errorResponse['message']}');
+      }
+    } catch (error) {
+      log("Error during social login: $error");
+      throw Exception('Error during social login: $error');
+    }
+  }
+
+  Future<void> socialLoginn({
     required BuildContext context,
     required String email,
     required String username,
@@ -301,9 +427,9 @@ class AuthProvider with ChangeNotifier {
       final response = await ApiClient().socialSignup(
         username: username,
         name: name,
-        is_admin: '0',
-        terms: '1',
-        social_signup: 'gmail',
+        is_admin: is_admin,
+        terms: '1', // Assuming '1' is for accepting terms
+        social_signup: social_signup,
         email: email,
         mobileNumber: mobileNumber,
         password: password,
@@ -312,14 +438,12 @@ class AuthProvider with ChangeNotifier {
 
       if (response['success'] == true) {
         // Handle successful signup
-        //  userDetail = Userdetails.fromJson(response);
-        // Optionally save token in shared preferences
         final prefs = await SharedPreferences.getInstance();
-        prefs.setString('access_token', response['access_token']);
-        prefs.setString('token_type', response['token_type']);
+        await prefs.setString('access_token', response['access_token']);
+        await prefs.setString('token_type', response['token_type']);
 
         // Navigate to the next screen or update state
-        // Navigator.of(context).pushReplacementNamed('/next_screen');
+        Navigator.of(context).pushReplacementNamed('/next_screen');
       } else {
         // Handle failed signup
         log("Signup failed: ${response['message']}");
@@ -341,7 +465,7 @@ class AuthProvider with ChangeNotifier {
     pref.clear();
   }
 
-  Future<void> logoutt(BuildContext context) async {
+  Future<void> logouttt(BuildContext context) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.clear();
     // navPushRemove(context: context, action: FirstOnboard());

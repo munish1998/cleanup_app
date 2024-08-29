@@ -17,6 +17,7 @@ class FriendTaskScreen extends StatefulWidget {
 
 class _FriendTaskScreenState extends State<FriendTaskScreen> {
   List<String> selectedFriends = []; // To keep track of selected friends
+  List<String> sharedFriends = []; // To keep track of already shared friends
 
   @override
   void initState() {
@@ -35,6 +36,14 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
   }
 
   void _toggleFriendSelection(String friendId) async {
+    if (sharedFriends.contains(friendId)) {
+      // Show a snackbar immediately if the user has already been shared with
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You have already shared this task.')),
+      );
+      return; // Exit the method early to prevent further selection
+    }
+
     setState(() {
       if (selectedFriends.contains(friendId)) {
         selectedFriends.remove(friendId);
@@ -47,7 +56,6 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
           );
         }
       }
-      // Log the updated selected friends list
       log('Updated selected friends: $selectedFriends');
     });
 
@@ -60,14 +68,55 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
 
   void _shareSelectedFriends() async {
     if (selectedFriends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('At least one friend must be selected.')),
-      );
+      _showSnackBar('At least one friend must be selected.');
       return;
     }
 
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+    bool alreadyShared =
+        selectedFriends.any((friendId) => sharedFriends.contains(friendId));
 
+    if (alreadyShared) {
+      _showSnackBar(
+          'You have already shared this task with one or more selected friends.');
+      return;
+    }
+
+    _showLoadingDialog('Sharing with selected friends...');
+
+    try {
+      bool success =
+          await Provider.of<TaskProviders>(context, listen: false).shareTask(
+        selectedFriends,
+        context: context,
+        taskId: widget.taskid ?? '',
+        friendIds: selectedFriends,
+      );
+
+      if (success) {
+        setState(() {
+          sharedFriends.addAll(selectedFriends);
+          selectedFriends.clear();
+        });
+
+        // Navigate to HomeScreen only if shareTask was successful
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
+    } catch (error) {
+      _showSnackBar('Failed to share task');
+    } finally {
+      Navigator.of(context).pop(); // Close the dialog
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _showLoadingDialog(String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -78,41 +127,75 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
             children: [
               CircularProgressIndicator(),
               SizedBox(width: 20),
-              Expanded(child: Text('Sharing with selected friends...')),
+              Expanded(child: Text(message)),
             ],
           ),
         );
       },
     );
-
-    try {
-      await taskProvider.shareTask(
-        selectedFriends,
-        context: context,
-        taskId: widget.taskid ?? '',
-        friendIds: selectedFriends,
-      );
-
-      Navigator.of(context).pop(); // Close the dialog
-
-      // Navigate to the home screen and remove the previous route
-      navPushReplace(
-        context: context,
-        action: HomeScreen(),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Task shared successfully!')),
-      );
-    } catch (error) {
-      Navigator.of(context).pop(); // Close the dialog
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to share task')),
-      );
-    }
   }
 
+  Widget _buildFriendTile(TaskProviders taskProvider, int index) {
+    final friend = taskProvider.myfriends[index];
+    final isSelected = selectedFriends.contains(friend.id.toString());
+    final isShared = sharedFriends.contains(friend.id.toString());
+
+    final baseUrl = 'https://webpristine.com/cleanup/public/';
+    final profileImageUrl =
+        friend.image != null ? '$baseUrl${friend.image}' : null;
+
+    log('Image URL: $profileImageUrl');
+
+    return ListTile(
+      tileColor: isSelected
+          ? Colors.blue.shade100
+          : isShared
+              ? Colors.grey.shade300
+              : Colors.white,
+      leading: CircleAvatar(
+        backgroundImage: profileImageUrl != null
+            ? NetworkImage(profileImageUrl)
+            : AssetImage('assets/images/image27.png') as ImageProvider,
+        backgroundColor: Colors.grey[300],
+        child: profileImageUrl == null
+            ? Icon(Icons.person, color: Colors.white)
+            : null,
+        onBackgroundImageError: (error, stackTrace) {
+          log('Image load error: $error');
+        },
+      ),
+      title: Text(
+        friend.name ?? 'Unknown',
+        style: TextStyle(
+          color: isSelected
+              ? Colors.blue
+              : isShared
+                  ? Colors.grey
+                  : Colors.black,
+        ),
+      ),
+      subtitle: Text(
+        friend.email ?? 'No email',
+        style: TextStyle(
+          color: isSelected
+              ? Colors.blueGrey
+              : isShared
+                  ? Colors.grey
+                  : Colors.black54,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_circle, color: Colors.green)
+          : isShared
+              ? Icon(Icons.block, color: Colors.red)
+              : null,
+      onTap: isShared
+          ? () => _showSnackBar('You have already shared this task.')
+          : () => _toggleFriendSelection(friend.id.toString()),
+    );
+  }
+
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,15 +228,19 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
             return Center(child: Text('No friends found'));
           }
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
                   itemCount: taskProvider.myfriends.length,
                   itemBuilder: (context, index) {
                     final friend = taskProvider.myfriends[index];
                     final isSelected =
                         selectedFriends.contains(friend.id.toString());
+                    final isShared =
+                        sharedFriends.contains(friend.id.toString());
 
                     // Construct the full image URL
                     final baseUrl = 'https://webpristine.com/cleanup/public/';
@@ -163,8 +250,11 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
                     log('Image URL: $profileImageUrl');
 
                     return ListTile(
-                      tileColor:
-                          isSelected ? Colors.blue.shade100 : Colors.white,
+                      tileColor: isSelected
+                          ? Colors.blue.shade100
+                          : isShared
+                              ? Colors.grey.shade300
+                              : Colors.white,
                       leading: CircleAvatar(
                         backgroundImage: profileImageUrl != null
                             ? NetworkImage(profileImageUrl)
@@ -176,49 +266,73 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
                             : null,
                         onBackgroundImageError: (error, stackTrace) {
                           log('Image load error: $error');
+                          // If an error occurs while loading the network image, fall back to the default asset image
+                          setState(() {});
                         },
                       ),
                       title: Text(
                         friend.name ?? 'Unknown',
                         style: TextStyle(
-                          color: isSelected ? Colors.blue : Colors.black,
+                          color: isSelected
+                              ? Colors.blue
+                              : isShared
+                                  ? Colors.grey
+                                  : Colors.black,
                         ),
                       ),
                       subtitle: Text(
                         friend.email ?? 'No email',
                         style: TextStyle(
-                          color: isSelected ? Colors.blueGrey : Colors.black54,
+                          color: isSelected
+                              ? Colors.blueGrey
+                              : isShared
+                                  ? Colors.grey
+                                  : Colors.black54,
                         ),
                       ),
                       trailing: isSelected
                           ? Icon(Icons.check_circle, color: Colors.green)
-                          : null,
-                      onTap: () => _toggleFriendSelection(friend.id.toString()),
+                          : isShared
+                              ? Icon(Icons.block, color: Colors.red)
+                              : null,
+                      onTap: isShared
+                          ? () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'You have already shared this task.')),
+                              );
+                            }
+                          : () => _toggleFriendSelection(friend.id.toString()),
                     );
                   },
                 ),
-              ),
-              InkWell(
-                onTap: () {
-                  _shareSelectedFriends();
-                },
-                child: Container(
-                  height: 54,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: AppColor.rank1Color),
-                  child: const Center(
-                    child: Text(
-                      'Share Task',
-                      style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: InkWell(
+                    onTap: _shareSelectedFriends,
+                    child: Container(
+                      height: 54,
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: AppColor.rank1Color,
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Share Task',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

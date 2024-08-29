@@ -262,33 +262,33 @@ class _ShareTaskState extends State<ShareTask> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(25.0),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CreateTask()),
-            );
-          },
-          backgroundColor: Colors.blue.shade200,
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 40,
-          ),
-          shape: const CircleBorder(),
-        ),
-      ),
+      // bottomNavigationBar: CustomBottomNavigationBar(
+      //   selectedIndex: _selectedIndex,
+      //   onItemTapped: (index) {
+      //     setState(() {
+      //       _selectedIndex = index;
+      //     });
+      //   },
+      // ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // floatingActionButton: Padding(
+      //   padding: const EdgeInsets.all(25.0),
+      //   child: FloatingActionButton(
+      //     onPressed: () {
+      //       Navigator.push(
+      //         context,
+      //         MaterialPageRoute(builder: (context) => const CreateTask()),
+      //       );
+      //     },
+      //     backgroundColor: Colors.blue.shade200,
+      //     child: const Icon(
+      //       Icons.add,
+      //       color: Colors.white,
+      //       size: 40,
+      //     ),
+      //     shape: const CircleBorder(),
+      //   ),
+      // ),
     );
   }
 

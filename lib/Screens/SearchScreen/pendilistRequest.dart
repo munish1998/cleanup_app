@@ -82,7 +82,14 @@ class _PendingListScreenState extends State<PendingListScreen> {
             itemCount: pendingRequests.length,
             itemBuilder: (context, index) {
               final request = pendingRequests[index];
-              final int requestId = request.id ?? 0; // Default value if null
+              final int requestId = request.id ?? 0;
+              String baseUrl = 'https://webpristine.com/cleanup/public';
+              // Default value if null
+              final profileImageUrl =
+                  '${request.sender!.baseUrl}${request.sender!.image}';
+              final imageProvider = (profileImageUrl == null)
+                  ? AssetImage('assets/images/image27.png') as ImageProvider
+                  : NetworkImage(profileImageUrl.toString()) as ImageProvider;
               log('request id response ====>>>$requestId');
               return Card(
                 elevation: 5,
@@ -92,8 +99,12 @@ class _PendingListScreenState extends State<PendingListScreen> {
                 ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
+                  leading: CircleAvatar(
+                    backgroundImage: imageProvider,
+                    backgroundColor: Colors.grey[300],
+                  ),
                   title: Text(request.sender?.name ?? 'Unknown'),
-                  subtitle: Text(request.sender?.email ?? 'No email'),
+                  subtitle: Text(request.sender?.username ?? 'No email'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

@@ -1,22 +1,22 @@
+import 'package:cleanup_mobile/Models/completetaskModel.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/material.dart';
-import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:provider/provider.dart';
 
-class SharTaskDetail extends StatefulWidget {
-  final ComingTaskModel task;
+class CompleteSharTaskDetail extends StatefulWidget {
+  final CompleteTaskModel task;
   final String taskid;
 
-  SharTaskDetail({Key? key, required this.task, required this.taskid})
+  CompleteSharTaskDetail({Key? key, required this.task, required this.taskid})
       : super(key: key);
 
   @override
-  _SharTaskDetailState createState() => _SharTaskDetailState();
+  _CompleteSharTaskDetailState createState() => _CompleteSharTaskDetailState();
 }
 
-class _SharTaskDetailState extends State<SharTaskDetail> {
+class _CompleteSharTaskDetailState extends State<CompleteSharTaskDetail> {
   Future<void> _acceptTaskAndNavigate(String taskId) async {
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
 
@@ -62,7 +62,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
   @override
   Widget build(BuildContext context) {
     final Task? taskDetails = widget.task.task;
-    final ComingTaskModel? sharerDetails = widget.task;
+    final CompleteTaskModel? sharerDetails = widget.task;
 
     return Scaffold(
       appBar: AppBar(
@@ -122,7 +122,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
-                      taskDetails?.title ?? 'Title',
+                      sharerDetails.sharetask!.location ?? 'Title',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
@@ -153,7 +153,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                           ),
                           child: taskDetails?.before != null
                               ? Image.network(
-                                  '${taskDetails?.baseUrl}${taskDetails?.before}',
+                                  '${taskDetails?.baseUrl}${sharerDetails.sharetask!.before}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Image.asset(
@@ -177,7 +177,7 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                           ),
                           child: taskDetails?.after != null
                               ? Image.network(
-                                  '${taskDetails.baseUrl}${taskDetails.after}',
+                                  '${taskDetails.baseUrl}${sharerDetails.sharetask!.after}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Image.asset(
@@ -195,55 +195,6 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                   ),
                   SizedBox(height: 16.0),
                   // Row for Accept and Decline Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            _declineTaskAndNavigate(widget.taskid);
-                          },
-                          child: Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Colors.red),
-                            child: const Center(
-                              child: Text(
-                                'Decline Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 16.0),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            _acceptTaskAndNavigate(widget.taskid);
-                          },
-                          child: Container(
-                            height: 54,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: AppColor.rank1Color),
-                            child: const Center(
-                              child: Text(
-                                'Accept Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),

@@ -23,18 +23,27 @@ class LeaderboardProvider with ChangeNotifier {
     final Map<String, String> headers = {
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
-    }; // Replace with your API URL
+    };
 
     try {
       final response = await http.get(url, headers: headers);
 
-      log('leaderboard  response : ${response.body}');
+      log('leaderboard response: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> result = jsonDecode(response.body);
         final leaderboardModel = LeaderboardModel.fromJson(result);
-        _getLeaderboard = leaderboardModel.leaderboard ?? [];
-        //  log('fetch task response ====>>>>$_getLeaderboard');
+
+        // Convert points to int and sort by points in descending order
+        final leaderboardList = leaderboardModel.leaderboard ?? [];
+        leaderboardList.sort((a, b) => int.parse(b.point.toString())
+            .compareTo(int.parse(a.point.toString())));
+
+        // Store all leaderboard entries
+        _getLeaderboard = leaderboardList;
+
+        // Notify listeners after fetching and processing data
+        notifyListeners();
       } else {
         customToast(context: context, msg: 'Server error', type: 0);
       }

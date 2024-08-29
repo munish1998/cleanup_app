@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       InkWell(
                           onTap: () async {
-                            await taskProvider.handleSignIn(context: context);
+                            await authProvider.googleLogin(context);
                           },
                           child: Image.asset('assets/images/image6.png')),
                       const SizedBox(

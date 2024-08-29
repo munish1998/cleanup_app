@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/FriendslistScreen/FriendsList.dart';
 import 'package:cleanup_mobile/FriendslistScreen/taskfreindliat.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
+import 'package:cleanup_mobile/Models/NotificationModel.dart';
 import 'package:cleanup_mobile/Models/RequestSendModel.dart';
 import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:cleanup_mobile/Models/completetaskModel.dart';
@@ -15,6 +17,7 @@ import 'package:cleanup_mobile/Models/pendingRequest.dart';
 import 'package:cleanup_mobile/Models/pendingtaskModel.dart';
 import 'package:cleanup_mobile/Models/sharetaskModel.dart';
 import 'package:cleanup_mobile/Models/userModel.dart';
+import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
@@ -44,6 +47,8 @@ class TaskProviders with ChangeNotifier {
   List<Taskk> get tasks => _tasks;
   List<AllUserModel> _allUser = [];
   List<AllUserModel> get allUser => _allUser;
+  List<Notifications> _notifications = [];
+  List<Notifications> get notifications => _notifications;
   List<RequestSendModel> _requestsendlist = [];
   List<RequestSendModel> get requestsendlist => _requestsendlist;
   List<MyFriendsModel> _myfreinds = [];
@@ -83,12 +88,105 @@ class TaskProviders with ChangeNotifier {
   int _taskCount = 0;
   int get taskCount => _taskCount;
 
+  Future<void> fetchCompleteTasks(String status) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final url = Uri.parse(
+        ApiServices.incomingTask); // Update with your actual endpoint if needed
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString(accessTokenKey) ?? '';
+    final userId = prefs.getString(userIdKey) ?? '';
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: {
+          'status': status,
+          'user_id': userId,
+        },
+      );
+
+      log('Response of complete task: ${response.body}');
+
+      if (response.statusCode == 200) {
+        if (response.headers['content-type']?.contains('application/json') ==
+            true) {
+          List<dynamic> jsonList = jsonDecode(response.body);
+          _mycompletes =
+              jsonList.map((json) => CompleteTaskModel.fromJson(json)).toList();
+          log('Parsed complete tasks: $_mycompletes');
+        } else {
+          log('Unexpected content type: ${response.headers['content-type']}');
+          throw Exception(
+              'Unexpected content type: ${response.headers['content-type']}');
+        }
+      } else {
+        log('Failed to load tasks with status code: ${response.statusCode}');
+        throw Exception('Failed to load tasks');
+      }
+    } catch (e) {
+      log('Error occurred: $e');
+      _mycompletes = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> getsharetaskList({
     required BuildContext context,
-    required String taskId, // Add taskId as a required parameter
+    required String taskId,
   }) async {
-    // Build the URL with the taskId as a query parameter
-    var url = Uri.parse('${ApiServices.getsharetaskList}?task_id=$taskId');
+    final url = Uri.parse('${ApiServices.getsharetaskList}?task_id=$taskId');
+
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      log('Response of share task: ${response.body}');
+      log('Access token: $accessToken');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> taskList = jsonDecode(response.body);
+
+        _sharetasklist = taskList
+            .map((taskData) => ShareTaskModel.fromJson(taskData))
+            .toList();
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        _sharetasklist = [];
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _sharetasklist = [];
+      customToast(context: context, msg: 'An error occurred: $e', type: 0);
+    }
+  }
+
+  Future<bool> shareTask(
+    List<String> selectedFriends, {
+    required BuildContext context,
+    required String taskId,
+    required List<String> friendIds,
+  }) async {
+    var url = Uri.parse(
+        'https://webpristine.com/cleanup/public/api/auth/task/share/$taskId');
 
     // Retrieve the access token from SharedPreferences
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -100,31 +198,91 @@ class TaskProviders with ChangeNotifier {
       'Content-Type': 'application/json',
     };
 
-    try {
-      // Make the GET request with headers
-      final response = await http.get(url, headers: headers);
+    // Prepare the request body
+    Map<String, dynamic> body = {
+      'ids': friendIds,
+    };
 
-      log('Response of share task: ${response.body}');
-      log('Access token: ${pref.getString(accessTokenKey).toString()}');
+    try {
+      // Make the POST request with headers and body
+      final response =
+          await http.post(url, headers: headers, body: jsonEncode(body));
+
+      log('Response share task: ${response.body}');
+      log('Response of accessToken: $accessToken');
+      log('Response of taskId: $taskId');
+      log('Response of IDs: $friendIds');
 
       if (response.statusCode == 200) {
-        // Parse the response body as a list of task objects
-        List<dynamic> taskList = jsonDecode(response.body);
-
-        _sharetasklist = taskList
-            .map((taskData) => ShareTaskModel.fromJson(taskData))
-            .toList();
-        notifyListeners(); // Notify listeners if using Provider
+        var responseBody = jsonDecode(response.body);
+        if (responseBody['success']) {
+          // Return true to indicate success
+          return true;
+        } else {
+          // Handle the case where the task has already been shared with the friend
+          if (responseBody['error'] != null &&
+              responseBody['error'].contains('already shared this task')) {
+            customToast(context: context, msg: responseBody['error'], type: 0);
+          } else {
+            customToast(
+                context: context, msg: responseBody['message'], type: 0);
+          }
+          // Return false to indicate failure
+          return false;
+        }
       } else {
-        // Handle server error
-        _sharetasklist = [];
-        customToast(context: context, msg: 'Server error', type: 0);
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
+        // Return false to indicate failure
+        return false;
       }
     } catch (e) {
       log('Error: $e');
-      _sharetasklist = [];
       customToast(context: context, msg: 'An error occurred', type: 0);
+      // Return false to indicate failure
+      return false;
     }
+  }
+
+  Future<void> fetchNotifications(BuildContext context) async {
+    _isLoading = true;
+    notifyListeners();
+
+    final url = Uri.parse(ApiServices.getNotification);
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseBody = jsonDecode(response.body);
+
+        final notificationModel = NotificationModel.fromJson(responseBody);
+        _notifications = notificationModel.notifications ?? [];
+        log('Fetched notifications: $responseBody');
+      } else {
+        log('Error: Server returned status ${response.statusCode}');
+        _notifications = [];
+      }
+    } catch (e) {
+      log('Error: $e');
+      _notifications = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void removeFriend(String userId) {
+    myfriends.removeWhere((friend) => friend.id.toString() == userId);
+    notifyListeners(); // Notify listeners to update the UI
   }
 
   Future<void> fetchTaskCount(String taskId) async {
@@ -566,7 +724,7 @@ class TaskProviders with ChangeNotifier {
             'Unexpected content type: ${response.headers['content-type']}');
       }
     } catch (e) {
-      log('Error occurred: $e');
+      log('Error occurredddd: $e');
       _comingTask = [];
       // customToast(context: context, msg: 'An error occurred', type: 0);
     }
@@ -615,7 +773,7 @@ class TaskProviders with ChangeNotifier {
             'Unexpected content type: ${response.headers['content-type']}');
       }
     } catch (e) {
-      log('Error occurred: $e');
+      log('Error occurreddddddd: $e');
       _comingTask = [];
       // customToast(context: context, msg: 'An error occurred', type: 0);
     }
@@ -900,61 +1058,6 @@ class TaskProviders with ChangeNotifier {
     } catch (e) {
       log('Error: $e');
       _allUser = [];
-      customToast(context: context, msg: 'An error occurred', type: 0);
-    }
-  }
-
-  Future<void> shareTask(
-    List<String> selectedFriends, {
-    required BuildContext context,
-    required String taskId,
-    required List<String> friendIds,
-  }) async {
-    var url = Uri.parse(
-        'https://webpristine.com/cleanup/public/api/auth/task/share/$taskId');
-
-    // Retrieve the access token from SharedPreferences
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-
-    // Create headers with Authorization
-    Map<String, String> headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    // Prepare the request body
-    Map<String, dynamic> body = {
-      'ids': friendIds,
-    };
-
-    try {
-      // Make the POST request with headers and body
-      final response =
-          await http.post(url, headers: headers, body: jsonEncode(body));
-
-      // Log the response status and body
-      // log('Response status: ${response.statusCode}');
-      log('Response share task: ${response.body}');
-      log('rsponse of accesstoken===>>>$accessToken');
-      log('response of taskid==>>>$taskId');
-      log('response of IDs==>>>$friendIds');
-      if (response.statusCode == 200) {
-        var responseBody = jsonDecode(response.body);
-        if (responseBody['success']) {
-          customToast(context: context, msg: responseBody['message'], type: 1);
-          // You may want to update the UI or state after successful sharing
-        } else {
-          customToast(context: context, msg: responseBody['message'], type: 0);
-        }
-      } else {
-        customToast(
-            context: context,
-            msg: 'Server error: ${response.statusCode}',
-            type: 0);
-      }
-    } catch (e) {
-      log('Error: $e');
       customToast(context: context, msg: 'An error occurred', type: 0);
     }
   }

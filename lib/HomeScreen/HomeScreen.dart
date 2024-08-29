@@ -7,7 +7,9 @@ import 'package:cleanup_mobile/NewTaskScreen/completetaskScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/newtasksScreen.dart';
 import 'package:cleanup_mobile/NewTaskScreen/pendingTask.dart';
 import 'package:cleanup_mobile/NewTaskScreen/sharetasklistScreen.dart';
+import 'package:cleanup_mobile/Notification/NotificationScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Providers/leaderboardProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/pendilistRequest.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/requestsendList.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Fetch tasks when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchTasks();
+      _fetchTaskss();
     });
   }
 
@@ -41,6 +44,14 @@ class _HomeScreenState extends State<HomeScreen> {
     await taskProvider.getMyTaskList(context: context);
     await taskProvider.fetchIncomingTasks('new');
     await taskProvider.fetchPendingTasks('pending');
+    await taskProvider.fetchIncomingTasks('completed');
+    // taskProvider.getToken(); // Adjust status as needed
+  }
+
+  Future<void> _fetchTaskss() async {
+    final taskProvider =
+        Provider.of<LeaderboardProvider>(context, listen: false);
+    await taskProvider.getLeaderboard.toString();
     // taskProvider.getToken(); // Adjust status as needed
   }
 
@@ -71,6 +82,23 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
         title: Image.asset('assets/images/image21.png'),
         actions: [
+          InkWell(
+            onTap: () {
+              // Navigate to notification screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationScreen()),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(
+                Icons.notifications,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(
               Icons.settings,
@@ -158,9 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => CompleteTaskScreen(
-                                  taskId: taskProvider.mytasklist.first.id,
-                                )),
+                            builder: (context) => CompleteTaskScreen()),
                       ),
                     ),
                     _buildTaskCard(
@@ -172,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ShareTaskScreen()),
+                            builder: (context) => RequestSendList()),
                       ),
                     ),
                     const SizedBox(height: 17),
@@ -270,32 +296,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLeaderboardSection() {
-    return Column(
-      children: List.generate(3, (index) {
+    final leaderboardProvider = Provider.of<LeaderboardProvider>(context);
+    final leaderboard = leaderboardProvider.getLeaderboard;
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: leaderboard.length >= 3 ? 3 : leaderboard.length,
+      itemBuilder: (context, index) {
+        final entry = leaderboard[index];
+
         return SizedBox(
           height: 95,
           child: Card(
             color: AppColor.backgroundcontainerColor,
             elevation: 0.2,
             child: ListTile(
-              leading: Image.asset('assets/images/image11.png'),
-              title: const Text(
-                'Sam Curran',
+              leading: CircleAvatar(
+                backgroundImage: NetworkImage(
+                  '${entry.user!.baseUrl}${entry.user!.image}',
+                ), // Replace with a default image URL if needed
+              ),
+              title: Text(
+                entry.user!.name ?? 'Unknown',
                 style: TextStyle(
                   color: AppColor.mytaskColor,
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              subtitle: const Text(
-                '@Username',
+              subtitle: Text(
+                entry.user!.email ?? 'Unknown',
                 style: TextStyle(color: AppColor.usernamehomeColor),
               ),
-              trailing: const Row(
+              trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '422',
+                    entry.point ?? '0',
                     style: TextStyle(color: Colors.lightBlue),
                   ),
                   Icon(
@@ -308,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-      }),
+      },
     );
   }
 }
