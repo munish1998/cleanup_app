@@ -88,6 +88,47 @@ class TaskProviders with ChangeNotifier {
   int _taskCount = 0;
   int get taskCount => _taskCount;
 
+  Future<void> getsharetaskList({
+    required BuildContext context,
+    required String taskId,
+  }) async {
+    final url = Uri.parse('${ApiServices.getsharetaskList}?task_id=$taskId');
+
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+
+      log('Response of share task: ${response.body}');
+      log('Access token: $accessToken');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> taskList = jsonDecode(response.body);
+
+        _sharetasklist = taskList
+            .map((taskData) => ShareTaskModel.fromJson(taskData))
+            .toList();
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        _sharetasklist = [];
+        customToast(
+            context: context,
+            msg: 'Server error: ${response.statusCode}',
+            type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _sharetasklist = [];
+      customToast(context: context, msg: 'An error occurred: $e', type: 0);
+    }
+  }
+
   Future<void> fetchCompleteTasks(String status) async {
     _isLoading = true;
     notifyListeners();
@@ -135,47 +176,6 @@ class TaskProviders with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  Future<void> getsharetaskList({
-    required BuildContext context,
-    required String taskId,
-  }) async {
-    final url = Uri.parse('${ApiServices.getsharetaskList}?task_id=$taskId');
-
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    final String? accessToken = pref.getString(accessTokenKey);
-
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      final response = await http.get(url, headers: headers);
-
-      log('Response of share task: ${response.body}');
-      log('Access token: $accessToken');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> taskList = jsonDecode(response.body);
-
-        _sharetasklist = taskList
-            .map((taskData) => ShareTaskModel.fromJson(taskData))
-            .toList();
-        notifyListeners(); // Notify listeners if using Provider
-      } else {
-        _sharetasklist = [];
-        customToast(
-            context: context,
-            msg: 'Server error: ${response.statusCode}',
-            type: 0);
-      }
-    } catch (e) {
-      log('Error: $e');
-      _sharetasklist = [];
-      customToast(context: context, msg: 'An error occurred: $e', type: 0);
     }
   }
 

@@ -423,21 +423,14 @@ class _DetailTaskScreenState extends State<DetailTaskScreen> {
                       break;
                     case 'completed':
                       // Ensure `widget.taskId` is defined in your widget state
-                      log('task response ==>>>${taskProvider.mycompletes.first}');
+                      log('task response ==>>>${shareTask.taskId.toString()}');
                       log('task response ==>>>${widget.taskId}');
                       navPush(
                           context: context,
-                          action: CompleteSharTaskDetails(
-                            task: shareTask,
-                            taskid: shareTask.id.toString(),
-                          ));
-                      // navPush(
-                      //   context: context,
-                      //   action: ShareTaskDetail(
-                      //     taskid: '191',
-                      //     shareTask: shareTask,
-                      //   ),
-                      // );
+                          action: SharTaskDetaill(
+                              task: shareTask,
+                              taskid: shareTask.taskId.toString()));
+
                       break;
                     default:
                       _showError('Unknown status');

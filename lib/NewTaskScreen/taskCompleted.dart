@@ -1,28 +1,30 @@
-import 'package:cleanup_mobile/Models/sharetaskModel.dart';
-import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cleanup_mobile/Models/sharetaskModel.dart';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'dart:developer';
 
-class CompleteSharTaskDetails extends StatefulWidget {
+class SharTaskDetaill extends StatefulWidget {
   final ShareTaskModel task;
   final String taskid;
 
-  CompleteSharTaskDetails({Key? key, required this.task, required this.taskid})
+  SharTaskDetaill({Key? key, required this.task, required this.taskid})
       : super(key: key);
 
   @override
-  _CompleteSharTaskDetailsState createState() =>
-      _CompleteSharTaskDetailsState();
+  _SharTaskDetaillState createState() => _SharTaskDetaillState();
 }
 
-class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
+class _SharTaskDetaillState extends State<SharTaskDetaill> {
   @override
   Widget build(BuildContext context) {
-    final taskDetails = widget.task.task;
-    final sharerDetails = widget.task.sharer;
+    final ShareTask? taskDetails = widget.task.shareTask;
+    final ShareTaskModel? sharerDetails = widget.task;
+    final taskProvider = Provider.of<TaskProviders>(context);
 
-    // Logging the task and sharer details
-    debugPrint('Task Details: ${taskDetails.toString()}');
-    debugPrint('Sharer Details: ${sharerDetails.toString()}');
+    // Log task id for debugging
+    log('Task ID: ${widget.taskid}');
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +41,7 @@ class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
               height: MediaQuery.of(context).size.height / 6,
               child: Center(
                 child: Text(
-                  taskDetails?.title ?? 'No Title',
+                  taskDetails?.title ?? 'Title',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -55,16 +57,15 @@ class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: NetworkImage(
-                      sharerDetails?.baseUrl != null &&
-                              sharerDetails?.image != null
-                          ? '${sharerDetails?.baseUrl}${sharerDetails?.image}'
+                      sharerDetails?.sharer?.image != null
+                          ? '${sharerDetails!.sharer!.baseUrl}${sharerDetails.sharer!.image}'
                           : 'https://via.placeholder.com/150',
                     ),
                     backgroundColor: Colors.grey[300],
                   ),
                   SizedBox(height: 16.0),
                   Text(
-                    sharerDetails?.name ?? 'Username',
+                    sharerDetails?.sharer?.name ?? 'Username',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -84,7 +85,7 @@ class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
-                      sharerDetails?.location ?? 'No Location',
+                      taskDetails?.title ?? 'Title',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
@@ -98,7 +99,7 @@ class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
-                      taskDetails?.description ?? 'No Description',
+                      taskDetails?.description ?? 'Description',
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
@@ -156,7 +157,7 @@ class _CompleteSharTaskDetailsState extends State<CompleteSharTaskDetails> {
                     ],
                   ),
                   SizedBox(height: 16.0),
-                  // Row for Accept and Decline Buttons
+                  // Add Accept and Decline Buttons here
                 ],
               ),
             ),
