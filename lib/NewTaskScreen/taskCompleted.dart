@@ -65,7 +65,7 @@ class _SharTaskDetaillState extends State<SharTaskDetaill> {
                   ),
                   SizedBox(height: 16.0),
                   Text(
-                    sharerDetails?.sharer?.name ?? 'Username',
+                    sharerDetails?.user.name ?? 'Username',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -77,19 +77,19 @@ class _SharTaskDetaillState extends State<SharTaskDetaill> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Text(
-                      taskDetails?.title ?? 'Title',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                  ),
+                  // Container(
+                  //   width: double.infinity,
+                  //   padding: EdgeInsets.all(8.0),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.grey[200],
+                  //     borderRadius: BorderRadius.circular(8.0),
+                  //   ),
+                  //   child: Text(
+                  //     taskDetails?.title ?? 'Title',
+                  //     style:
+                  //         TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  //   ),
+                  // ),
                   SizedBox(height: 16.0),
                   Container(
                     width: double.infinity,

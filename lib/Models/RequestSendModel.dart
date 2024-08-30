@@ -6,6 +6,7 @@ class RequestSendModel {
   String? createdAt;
   String? updatedAt;
   Sender? sender;
+  Sender? receiver;
 
   RequestSendModel(
       {this.id,
@@ -14,7 +15,8 @@ class RequestSendModel {
       this.status,
       this.createdAt,
       this.updatedAt,
-      this.sender});
+      this.sender,
+      this.receiver});
 
   RequestSendModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -25,6 +27,8 @@ class RequestSendModel {
     updatedAt = json['updated_at'];
     sender =
         json['sender'] != null ? new Sender.fromJson(json['sender']) : null;
+    receiver =
+        json['receiver'] != null ? new Sender.fromJson(json['receiver']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -38,6 +42,9 @@ class RequestSendModel {
     if (this.sender != null) {
       data['sender'] = this.sender!.toJson();
     }
+    if (this.receiver != null) {
+      data['receiver'] = this.receiver!.toJson();
+    }
     return data;
   }
 }
@@ -48,9 +55,9 @@ class Sender {
   String? name;
   String? email;
   String? mobile;
-  Null? dob;
+  String? dob;
   String? image;
-  Null? bgimage;
+  String? bgimage;
   String? baseUrl;
   String? location;
   int? terms;

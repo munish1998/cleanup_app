@@ -31,9 +31,9 @@ class ShareTaskModel {
       sharerId: json['sharer_id'],
       userId: json['user_id'],
       taskId: json['task_id'],
-      status: json['status'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      status: json['status'] ?? '', // Provide a default value if null
+      createdAt: json['created_at'] ?? '', // Provide a default value if null
+      updatedAt: json['updated_at'] ?? '', // Provide a default value if null
       user: User.fromJson(json['user']),
       task: Task.fromJson(json['task']),
       sharer: Sharer.fromJson(json['sharer']),
@@ -90,18 +90,20 @@ class User {
       name: json['name'],
       email: json['email'],
       mobile: json['mobile'],
-      dob: json['dob'],
-      image: json['image'],
-      bgimage: json['bgimage'],
-      baseUrl: json['base_url'],
-      location: json['location'],
-      terms: json['terms'],
-      socialSignup: json['social_signup'],
-      isAdmin: json['is_admin'],
-      isActive: json['is_active'],
-      emailVerifiedAt: json['email_verified_at'],
-      updatedAt: json['updated_at'],
-      createdAt: json['created_at'],
+      dob: json['dob'] ?? '', // Provide a default value if null
+      image: json['image'] ?? '', // Provide a default value if null
+      bgimage: json['bgimage'] ?? '', // Provide a default value if null
+      baseUrl: json['base_url'] ?? '', // Provide a default value if null
+      location: json['location'] ?? '', // Provide a default value if null
+      terms: json['terms'] ?? 0, // Provide a default value if null
+      socialSignup:
+          json['social_signup'] ?? '', // Provide a default value if null
+      isAdmin: json['is_admin'] ?? 0, // Provide a default value if null
+      isActive: json['is_active'] ?? 0, // Provide a default value if null
+      emailVerifiedAt:
+          json['email_verified_at'] ?? '', // Provide a default value if null
+      updatedAt: json['updated_at'] ?? '', // Provide a default value if null
+      createdAt: json['created_at'] ?? '', // Provide a default value if null
     );
   }
 }
@@ -140,15 +142,15 @@ class Task {
       id: json['id'],
       userId: json['user_id'],
       shareTaskId: json['share_task_id'],
-      location: json['location'],
-      title: json['title'],
-      description: json['description'],
-      before: json['before'],
-      after: json['after'],
-      baseUrl: json['base_url'],
-      status: json['status'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      location: json['location'] ?? '', // Provide a default value if null
+      title: json['title'] ?? '', // Provide a default value if null
+      description: json['description'] ?? '', // Provide a default value if null
+      before: json['before'] ?? '', // Provide a default value if null
+      after: json['after'] ?? '', // Provide a default value if null
+      baseUrl: json['base_url'] ?? '', // Provide a default value if null
+      status: json['status'] ?? '', // Provide a default value if null
+      createdAt: json['created_at'] ?? '', // Provide a default value if null
+      updatedAt: json['updated_at'] ?? '', // Provide a default value if null
     );
   }
 }
@@ -199,18 +201,20 @@ class Sharer {
       name: json['name'],
       email: json['email'],
       mobile: json['mobile'],
-      dob: json['dob'],
-      image: json['image'],
-      bgimage: json['bgimage'],
-      baseUrl: json['base_url'],
-      location: json['location'],
-      terms: json['terms'],
-      socialSignup: json['social_signup'],
-      isAdmin: json['is_admin'],
-      isActive: json['is_active'],
-      emailVerifiedAt: json['email_verified_at'],
-      updatedAt: json['updated_at'],
-      createdAt: json['created_at'],
+      dob: json['dob'] ?? '', // Provide a default value if null
+      image: json['image'] ?? '', // Provide a default value if null
+      bgimage: json['bgimage'] ?? '', // Provide a default value if null
+      baseUrl: json['base_url'] ?? '', // Provide a default value if null
+      location: json['location'] ?? '', // Provide a default value if null
+      terms: json['terms'] ?? 0, // Provide a default value if null
+      socialSignup:
+          json['social_signup'] ?? '', // Provide a default value if null
+      isAdmin: json['is_admin'] ?? 0, // Provide a default value if null
+      isActive: json['is_active'] ?? 0, // Provide a default value if null
+      emailVerifiedAt:
+          json['email_verified_at'] ?? '', // Provide a default value if null
+      updatedAt: json['updated_at'] ?? '', // Provide a default value if null
+      createdAt: json['created_at'] ?? '', // Provide a default value if null
     );
   }
 }
@@ -249,15 +253,15 @@ class ShareTask {
       id: json['id'],
       userId: json['user_id'],
       shareTaskId: json['share_task_id'],
-      location: json['location'],
-      title: json['title'],
-      description: json['description'],
-      before: json['before'],
-      after: json['after'],
-      baseUrl: json['base_url'],
-      status: json['status'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      location: json['location'] ?? '', // Provide a default value if null
+      title: json['title'] ?? '', // Provide a default value if null
+      description: json['description'] ?? '', // Provide a default value if null
+      before: json['before'] ?? '', // Provide a default value if null
+      after: json['after'] ?? '', // Provide a default value if null
+      baseUrl: json['base_url'] ?? '', // Provide a default value if null
+      status: json['status'] ?? '', // Provide a default value if null
+      createdAt: json['created_at'] ?? '', // Provide a default value if null
+      updatedAt: json['updated_at'] ?? '', // Provide a default value if null
     );
   }
 }

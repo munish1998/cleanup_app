@@ -49,15 +49,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchTaskss() async {
-    final taskProvider =
+    final leaderboardProvider =
         Provider.of<LeaderboardProvider>(context, listen: false);
-    await taskProvider.getLeaderboard.toString();
-    // taskProvider.getToken(); // Adjust status as needed
+    await leaderboardProvider.fetchTasks(
+        context: context); // Correct method call
   }
 
   Future<void> _onRefresh() async {
     // Call the method to fetch tasks
     await _fetchTasks();
+    await _fetchTaskss();
   }
 
   @override
@@ -302,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView.builder(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: leaderboard.length >= 3 ? 3 : leaderboard.length,
+      itemCount: leaderboard.length,
       itemBuilder: (context, index) {
         final entry = leaderboard[index];
 

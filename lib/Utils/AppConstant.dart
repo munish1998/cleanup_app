@@ -11,6 +11,7 @@ class AppColor {
   static const Color mytaskColor = Color(0xFF263238);
   static const Color usernamehomeColor = Color(0xFF707B81);
   static const Color dividerColor = Color(0xFFE5E7EB);
+  static const String faqHelp = '';
   static const String service =
       'Cleaning apps often provide task lists or schedules for various cleaning activities. Users can create customized cleaning checklists based on room types, specific tasks, or frequency of cleaning';
 }

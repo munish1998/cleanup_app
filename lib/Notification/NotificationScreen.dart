@@ -3,6 +3,7 @@ import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Models/NotificationModel.dart';
+import 'package:intl/intl.dart'; // Import the intl package
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -18,6 +19,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
     // Fetch notifications when the screen is initialized
     Provider.of<TaskProviders>(context, listen: false)
         .fetchNotifications(context);
+  }
+
+  // Function to format the date from String
+  String _formatDate(String? dateString) {
+    if (dateString == null) return 'Unknown date';
+    try {
+      DateTime dateTime = DateTime.parse(dateString);
+      final DateFormat formatter = DateFormat('yyyy-MM-dd – kk:mm');
+      return formatter.format(dateTime);
+    } catch (e) {
+      return 'Invalid date';
+    }
   }
 
   @override
@@ -63,8 +76,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               ),
                               title: Text(notification.title ?? 'No title'),
                               subtitle: Text(
-                                  notification.createdAt.toString() ??
-                                      'No body'),
+                                _formatDate(notification
+                                    .createdAt), // Format the date from string
+                              ),
                             ),
                           ))
                       .toList(),

@@ -40,17 +40,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      name: 'flutter',
-      options: FirebaseOptions(
-        apiKey: "AIzaSyBtr4YxUIDzMARKWHJUjtKYJoCo3RUQQmw",
-        appId: "1:30736213150:android:64ca324d5dea35c1a0078f",
-        messagingSenderId: "30736213150",
-        projectId: "cleanup-44c1b",
-      ),
-    );
-  }
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   await _msgService.init();
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 

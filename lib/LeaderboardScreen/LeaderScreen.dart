@@ -15,16 +15,13 @@ class LeaderBoardScreen extends StatefulWidget {
   State<LeaderBoardScreen> createState() => _LeaderBoardScreenState();
 }
 
-class _LeaderBoardScreenState extends State<LeaderBoardScreen>
-    with SingleTickerProviderStateMixin {
+class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedIndex = 0;
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<LeaderboardProvider>(context, listen: false)
           .fetchTasks(context: context);
@@ -32,16 +29,11 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 248, 253, 255),
       appBar: AppBar(
+        backgroundColor: AppColor.rank1Color,
         leading: InkWell(
           onTap: () => Navigator.pop(context),
           child: const Icon(Icons.arrow_back),
@@ -60,56 +52,8 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Card(
-              elevation: 0.2,
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppColor.backgroundcontainerColor,
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: Theme.of(context).colorScheme.copyWith(
-                          surfaceVariant: Colors.transparent,
-                        ),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicatorPadding: const EdgeInsets.all(8),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicator: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      color: AppColor.rank1Color,
-                    ),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.black,
-                    labelStyle: GoogleFonts.lato(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    unselectedLabelStyle: GoogleFonts.lato(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    tabs: const [
-                      Tab(text: 'Region'),
-                      Tab(text: 'National'),
-                      Tab(text: 'Global'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  tabview(context),
-                  tabview(context),
-                  tabview(context),
-                ],
-              ),
+              child: leaderboardView(context),
             ),
           ],
         ),
@@ -142,11 +86,11 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
     );
   }
 
-  Widget tabview(BuildContext context) {
+  Widget leaderboardView(BuildContext context) {
     return Consumer<LeaderboardProvider>(
       builder: (context, provider, child) {
         if (provider.getLeaderboard.isEmpty) {
-          return Center(child: Text('No leaderboard data available.'));
+          return Center(child: CircularProgressIndicator());
         }
 
         // Separate the top 3 users and the rest
@@ -205,7 +149,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
     required int rank,
     required String username,
     required String points,
-    required String? imageUrl, // Use imageUrl instead of imageAssetPath
+    required String? imageUrl,
   }) {
     return ListTile(
       leading: ClipOval(
@@ -239,8 +183,6 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
         height: height.toDouble(),
         child: Stack(
           children: [
-            // Rank balloon shape
-
             Positioned.fill(
               child: Card(
                 elevation: 10,
@@ -304,7 +246,6 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                           child: Container(
                             height: 20,
                             width: 20,
-                            // height: 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: _getRankColor(rank),

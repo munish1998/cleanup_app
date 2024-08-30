@@ -377,12 +377,12 @@ class TaskProviders with ChangeNotifier {
 
           notifyListeners();
           commonToast(msg: result['message'], color: Colors.blue);
-          void _showShareOptionsBottomSheet(
-            BuildContext context,
-          ) {
-            final taskProviders =
-                Provider.of<TaskProviders>(context, listen: false);
-          }
+          // void _showShareOptionsBottomSheet(
+          //   BuildContext context,
+          // ) {
+          //   final taskProviders =
+          //       Provider.of<TaskProviders>(context, listen: false);
+          // }
 
           // Navigate to FriendListScreen with the task ID
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -542,9 +542,9 @@ class TaskProviders with ChangeNotifier {
       // Make the GET request with headers
       final response = await http.get(url, headers: headers);
 
-      log('Response status: ${response.statusCode}');
-      log('Response body: ${response.body}');
-      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
+      // log('Response status: ${response.statusCode}');
+      log('Response of send request: ${response.body}');
+      //  log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
       if (response.statusCode == 200) {
         // Parse the response body as a list of user objects
         List<dynamic> userList = jsonDecode(response.body);

@@ -84,6 +84,7 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
     _showLoadingDialog('Sharing with selected friends...');
 
     try {
+      // Attempt to share the task
       bool success =
           await Provider.of<TaskProviders>(context, listen: false).shareTask(
         selectedFriends,
@@ -92,21 +93,29 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
         friendIds: selectedFriends,
       );
 
+      // Close the loading dialog
+      Navigator.of(context).pop();
+
       if (success) {
         setState(() {
           sharedFriends.addAll(selectedFriends);
           selectedFriends.clear();
         });
 
-        // Navigate to HomeScreen only if shareTask was successful
+        // Navigate to the HomeScreen after a successful share
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );
+      } else {
+        // Show an error if the sharing was not successful
+        _showSnackBar('Failed to share the task.');
       }
     } catch (error) {
-      _showSnackBar('Failed to share task');
-    } finally {
-      Navigator.of(context).pop(); // Close the dialog
+      // Close the loading dialog in case of an error
+      Navigator.of(context).pop();
+
+      // Handle any errors that occur during the sharing process
+      _showSnackBar('An error occurred: ${error.toString()}');
     }
   }
 
