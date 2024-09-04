@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'package:cleanup_mobile/Auth_Screen/SignIn.dart';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Models/userModel.dart';
+import 'package:cleanup_mobile/Utils/customSnackbar.dart';
+import 'package:cleanup_mobile/Utils/customredSnackbar.dart';
 import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:cleanup_mobile/apiServices/apiServices.dart';
 import 'package:firebase_auth/firebase_auth.dart ' as fa;
@@ -162,7 +165,7 @@ class AuthProvider with ChangeNotifier {
 
           log('Stored access token: ${pref.getString(accessTokenKey)}');
           log('Stored user ID: ${pref.getString(userIdKey)}');
-
+          showTopSnackBar(context,'Login successful');
           _isLogin = true;
           notifyListeners();
 
@@ -171,30 +174,21 @@ class AuthProvider with ChangeNotifier {
 
           return true; // Login successful
         } else {
-          customToast(
-              context: context,
-              msg: result['message'] ?? 'Login failed',
-              type: 0);
+          showredTopSnackBar(context, response.body);
           _isLogin = false;
           notifyListeners();
           return false; // Login failed
         }
       } catch (e) {
         log('Error parsing response: $e');
-        customToast(
-            context: context,
-            msg: 'An error occurred while processing the response',
-            type: 0);
+        showredTopSnackBar(context, response.body);
         _isLogin = false;
         notifyListeners();
         return false; // Login failed
       }
     } else {
       log('Error response status code: ${response.statusCode}');
-      customToast(
-          context: context,
-          msg: 'Server error: ${response.statusCode}',
-          type: 0);
+      showredTopSnackBar(context, response.body);
       _isLogin = false;
       notifyListeners();
       return false; // Login failed
@@ -508,11 +502,24 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<void> signUp(
+  void navPushh(
       {required BuildContext context,
-      required Map<String, dynamic> data}) async {
-    var url = Uri.parse(ApiServices.register);
-    showLoaderDialog(context, 'Please Wait..');
+      required Widget action,
+      String? accessToken}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => action, // Modify this if necessary
+      ),
+    );
+  }
+
+  Future<void> signUp({
+    required BuildContext context,
+    required Map<String, dynamic> data,
+  }) async {
+    var url = Uri.parse(ApiServices.register); // Replace with your API URL
+    showLoaderDialog(context, 'Please Wait..'); // Show a loading indicator
 
     try {
       // Make the POST request
@@ -520,47 +527,112 @@ class AuthProvider with ChangeNotifier {
         url,
         headers: {
           'Content-Type': 'application/json',
-          // Add other headers if needed
         },
         body: jsonEncode(data),
       );
 
+      log('Response status: ${response.statusCode}');
       log('Response body: ${response.body}');
 
-      if (response.statusCode != 200) {
-        // Handle non-200 status codes
-        customToast(context: context, msg: 'Failed to register', type: 0);
-        return;
-      }
+      if (response.statusCode == 200) {
+        try {
+          var result = jsonDecode(response.body);
 
-      // Decode the JSON response
-      var result = jsonDecode(response.body);
+          if (result['success'] == true) {
+            // Registration successful
+            String accessToken = result['access_token'];
+            String tokenType = result['token_type'];
 
-      log('SignUp result: $result');
+            // Save tokens if needed
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            await prefs.setString('access_token', accessToken);
+            await prefs.setString('token_type', tokenType);
 
-      if (result['success'] == true) {
-        // Registration successful
-        String accessToken = result['access_token'];
-        String tokenType = result['token_type'];
+            // Close the loader dialog
+            if (Navigator.canPop(context)) {
+              navPop(context: context);
+            }
 
-        // You can save the token and type if needed
-        // For example, using SharedPreferences
-        // SharedPreferences prefs = await SharedPreferences.getInstance();
-        // await prefs.setString('access_token', accessToken);
-        // await prefs.setString('token_type', tokenType);
+            // Show success message in a Snackbar
+            showTopSnackBar(context, response.body);
 
-        // Navigate to login and remove all previous routes
+            // Navigate to the Home screen after a delay
+            Future.delayed(Duration(seconds: 2), () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        HomeScreen()), // Adjust to your HomeScreen
+              );
+            });
+          } else {
+            // Handle validation errors
+            if (result['errors'] != null) {
+              var errors = result['errors'];
+              String errorMessages = '';
+
+              // Extract error messages from the response
+              errors.forEach((key, value) {
+                for (var message in value) {
+                  errorMessages += '$message\n';
+                }
+              });
+
+              // Show validation error messages in a Snackbar
+              showredTopSnackBar(context, response.body);
+            } else {
+              // Show generic error message from API
+              showredTopSnackBar(context, response.body);
+            }
+          }
+        } catch (e) {
+          // Handle JSON parsing error
+          log('JSON Parsing Error: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Unexpected response format'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } else if (response.statusCode == 409) {
+        // Handle conflict error
+        var errorMsg = 'Server side error ';
+        try {
+          var result = jsonDecode(response.body);
+          errorMsg = result['message'] ?? errorMsg;
+        } catch (e) {
+          log('Error parsing conflict response: $e');
+        }
+        showredTopSnackBar(context, response.body);
+      } else if (response.statusCode == 405) {
+        // Handle method not allowed error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Method Not Allowed: ${response.body}'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
       } else {
-        customToast(
-            context: context,
-            msg: result['message'] ?? 'Unknown error',
-            type: 0);
+        // Show server error message
+        showredTopSnackBar(context, response.body);
       }
     } catch (e) {
       log('SignUp Error: $e');
-      customToast(context: context, msg: 'SignUp Error: $e', type: 0);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('SignUp Error: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
+      );
     } finally {
-      navPop(context: context); // Close the loader dialog
+      // Ensure the loader dialog is closed in case of both success and failure
+      if (Navigator.canPop(context)) {
+        navPop(context: context);
+      }
     }
   }
 
@@ -591,7 +663,7 @@ class AuthProvider with ChangeNotifier {
         return null;
       }
     } else {
-      customToast(context: context, msg: result['message'], type: 0);
+      showredTopSnackBar(context, response.body);
       _isVerify = false;
       notifyListeners();
       return null;
@@ -614,12 +686,12 @@ class AuthProvider with ChangeNotifier {
         _isForgot = true;
         notifyListeners();
       } else {
-        customToast(context: context, msg: result['message'], type: 0);
+        showredTopSnackBar(context, response.body);
         _isForgot = false;
         notifyListeners();
       }
     } else {
-      customToast(context: context, msg: result['message'], type: 0);
+      showredTopSnackBar(context, response.body);
       _isForgot = false;
       notifyListeners();
     }
@@ -654,13 +726,13 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return result['reset_token']; // Return the reset token
       } else {
-        customToast(context: context, msg: result['message'], type: 0);
+        showredTopSnackBar(context, response.body);
         _isVerify = false;
         notifyListeners();
         return null;
       }
     } else {
-      customToast(context: context, msg: result['message'], type: 0);
+      showredTopSnackBar(context, response.body);
       _isVerify = false;
       notifyListeners();
       return null;
@@ -688,12 +760,12 @@ class AuthProvider with ChangeNotifier {
 
         notifyListeners();
       } else {
-        customToast(context: context, msg: result['message'], type: 0);
+        showredTopSnackBar(context, response.body);
         _isVerify = false;
         notifyListeners();
       }
     } else {
-      customToast(context: context, msg: result['message'], type: 0);
+      showredTopSnackBar(context, response.body);
       _isVerify = false;
       notifyListeners();
     }
@@ -715,12 +787,12 @@ class AuthProvider with ChangeNotifier {
         _isForgot = true;
         notifyListeners();
       } else {
-        customToast(context: context, msg: result['message'], type: 0);
+        showredTopSnackBar(context, response.body);
         _isForgot = false;
         notifyListeners();
       }
     } else {
-      customToast(context: context, msg: result['message'], type: 0);
+      showredTopSnackBar(context, response.body);
       _isForgot = false;
       notifyListeners();
     }
@@ -757,7 +829,7 @@ class AuthProvider with ChangeNotifier {
 
         // Notify listeners and handle any UI updates
         notifyListeners();
-        customToast(context: context, msg: 'Logout successful', type: 1);
+        showTopSnackBar(context, response.body);
 
         // Optionally, navigate to login or home screen
         // navPushRemove(context: context, action: FirstOnboard());

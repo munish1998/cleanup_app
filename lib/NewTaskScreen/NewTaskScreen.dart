@@ -399,12 +399,12 @@ class _CreateTaskState extends State<CreateTask> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          navPush(
+                          navPushReplace(
                               context: context,
                               action: FriendTaskScreen(
                                   taskid: taskProviders.mytasklist.first.id
-                                      .toString()));
-                          // Handle first image tap
+                                      .toString())); // navPush(
+
                           print('Image 1 clicked');
                         },
                         child: Image.asset('assets/images/image16.png'),

@@ -1,8 +1,10 @@
 import 'package:cleanup_mobile/Bottomnavbar/Bottomnavbar.dart';
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Models/leaderboardModel.dart';
 import 'package:cleanup_mobile/NewTaskScreen/NewTaskScreen.dart';
 import 'package:cleanup_mobile/Providers/leaderboardProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,7 +37,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
       appBar: AppBar(
         backgroundColor: AppColor.rank1Color,
         leading: InkWell(
-          onTap: () => Navigator.pop(context),
+          onTap: () => navPushReplace(context: context, action: HomeScreen()),
           child: const Icon(Icons.arrow_back),
         ),
         centerTitle: true,
@@ -65,6 +67,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
             _selectedIndex = index;
           });
         },
+        // navigatorKey: GlobalKey<NavigatorState>(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(

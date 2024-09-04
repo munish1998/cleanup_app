@@ -136,6 +136,7 @@ class _MyTaskListState extends State<MyTaskList> {
             _selectedIndex = index;
           });
         },
+        // navigatorKey: GlobalKey<NavigatorState>(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(
@@ -151,8 +152,9 @@ class _MyTaskListState extends State<MyTaskList> {
           child: const Icon(
             Icons.add,
             color: Colors.white,
-            size: 40,
+            size: 30,
           ),
+          mini: true,
           shape: const CircleBorder(),
         ),
       ),

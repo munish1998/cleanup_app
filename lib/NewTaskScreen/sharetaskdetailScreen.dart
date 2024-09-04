@@ -1,6 +1,8 @@
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:cleanup_mobile/Models/comingtaskModel.dart';
 import 'package:provider/provider.dart';
@@ -17,39 +19,54 @@ class SharTaskDetail extends StatefulWidget {
 }
 
 class _SharTaskDetailState extends State<SharTaskDetail> {
+  bool _isLoadingAccept = false;
+  bool _isLoadingDecline = false;
+
   Future<void> _acceptTaskAndNavigate(String taskId) async {
+    setState(() {
+      _isLoadingAccept = true;
+    });
     final taskProvider = Provider.of<TaskProviders>(context, listen: false);
 
     try {
       await taskProvider.fetchTaskDetails(context, taskId, 'pending');
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ShareTask(
-            tasktitle: taskProvider.comingTask.first.task!.title.toString(),
-          ),
-        ),
-      );
-    } catch (error) {
-      _showError('Failed to accept task');
-    }
-  }
-
-  Future<void> _declineTaskAndNavigate(String taskId) async {
-    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
-
-    try {
-      await taskProvider.declinetaskRequest(context, taskId, 'cancelled');
+      navPushReplace(
+          context: context,
+          action: ShareTask(
+              tasktitle: taskProvider.comingTask.first.task!.title.toString()));
 
       // Navigator.push(
       //   context,
       //   MaterialPageRoute(
-      //     builder: (context) => ShareTask(),
+      //     builder: (context) => ShareTask(
+      //       tasktitle: taskProvider.comingTask.first.task!.title.toString(),
+      //     ),
       //   ),
       // );
     } catch (error) {
+      _showError('Failed to accept task');
+    } finally {
+      setState(() {
+        _isLoadingAccept = false;
+      });
+    }
+  }
+
+  Future<void> _declineTaskAndNavigate(String taskId) async {
+    setState(() {
+      _isLoadingDecline = true;
+    });
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+    try {
+      await taskProvider.declinetaskRequest(context, taskId, 'cancelled');
+      navPushReplace(context: context, action: HomeScreen());
+    } catch (error) {
       _showError('Failed to decline task');
+    } finally {
+      setState(() {
+        _isLoadingDecline = false;
+      });
     }
   }
 
@@ -199,22 +216,29 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                     children: [
                       Expanded(
                         child: InkWell(
-                          onTap: () {
-                            _declineTaskAndNavigate(widget.taskid);
-                          },
+                          onTap: _isLoadingDecline
+                              ? null
+                              : () {
+                                  _declineTaskAndNavigate(widget.taskid);
+                                },
                           child: Container(
                             height: 54,
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Colors.red),
-                            child: const Center(
-                              child: Text(
-                                'Decline Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              color: Colors.red,
+                            ),
+                            child: Center(
+                              child: _isLoadingDecline
+                                  ? CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : Text(
+                                      'Decline Task',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                             ),
                           ),
                         ),
@@ -222,22 +246,29 @@ class _SharTaskDetailState extends State<SharTaskDetail> {
                       SizedBox(width: 16.0),
                       Expanded(
                         child: InkWell(
-                          onTap: () {
-                            _acceptTaskAndNavigate(widget.taskid);
-                          },
+                          onTap: _isLoadingAccept
+                              ? null
+                              : () {
+                                  _acceptTaskAndNavigate(widget.taskid);
+                                },
                           child: Container(
                             height: 54,
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: AppColor.rank1Color),
-                            child: const Center(
-                              child: Text(
-                                'Accept Task',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              color: AppColor.rank1Color,
+                            ),
+                            child: Center(
+                              child: _isLoadingAccept
+                                  ? CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : Text(
+                                      'Accept Task',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                             ),
                           ),
                         ),

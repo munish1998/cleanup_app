@@ -1,7 +1,7 @@
-import 'package:cleanup_mobile/Providers/profileProivder.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import for TextInputFormatter
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:cleanup_mobile/Providers/profileProivder.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -172,12 +172,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String? hintText,
     String? Function(String?)? validator,
     Function()? onTap,
-    List<TextInputFormatter>? inputFormatters, // Add this parameter
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AbsorbPointer(
-        absorbing: onTap != null, // Absorb taps only if onTap is provided
+        absorbing: onTap != null,
         child: Card(
           color: AppColor.backgroundcontainerColor,
           elevation: 0.3,
@@ -190,13 +190,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               labelText: label,
               hintText: hintText,
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             obscureText: obscureText,
             keyboardType: keyboardType,
             validator: validator,
-            inputFormatters:
-                inputFormatters, // Pass inputFormatters to TextFormField
+            inputFormatters: inputFormatters,
           ),
         ),
       ),

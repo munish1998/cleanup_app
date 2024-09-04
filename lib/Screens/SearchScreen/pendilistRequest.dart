@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
-import 'package:cleanup_mobile/Screens/SearchScreen/shareTask.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +15,10 @@ class PendingListScreen extends StatefulWidget {
 }
 
 class _PendingListScreenState extends State<PendingListScreen> {
+  // Map to track the loading state for each request and action
+  Map<int, bool> _acceptLoading = {};
+  Map<int, bool> _declineLoading = {};
+
   @override
   void initState() {
     super.initState();
@@ -34,30 +37,44 @@ class _PendingListScreenState extends State<PendingListScreen> {
   }
 
   Future<void> _acceptRequest(int requestId) async {
+    setState(() {
+      _acceptLoading[requestId] = true;
+    });
+
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .acceptFriendRequest(context: context, requestId: requestId);
-      //  Navigate to ShareTaskScreen upon success
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => HomeScreen()),
+      //  );
     } catch (e) {
-      // Handle any errors that occur during acceptance
       print('Error accepting friend request: $e');
+    } finally {
+      setState(() {
+        _acceptLoading[requestId] = false;
+      });
     }
   }
 
   Future<void> _declineRequest(int requestId) async {
+    setState(() {
+      _declineLoading[requestId] = true;
+    });
+
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .declineFriendRequest(context: context, requestId: requestId);
-      navPush(context: context, action: HomeScreen());
-      // Optionally refresh the pending requests list
-      //  _fetchPendingRequests();
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => HomeScreen()),
+      // );
     } catch (e) {
-      // Handle any errors that occur during declination
       print('Error declining friend request: $e');
+    } finally {
+      setState(() {
+        _declineLoading[requestId] = false;
+      });
     }
   }
 
@@ -70,10 +87,8 @@ class _PendingListScreenState extends State<PendingListScreen> {
       ),
       body: Consumer<TaskProviders>(
         builder: (context, taskProvider, child) {
-          // Get the list of pending requests from the provider
           List<PendingRequestModel> pendingRequests = taskProvider.pending;
 
-          // Check if there are any pending requests
           if (pendingRequests.isEmpty) {
             return Center(child: Text('No pending requests'));
           }
@@ -84,13 +99,15 @@ class _PendingListScreenState extends State<PendingListScreen> {
               final request = pendingRequests[index];
               final int requestId = request.id ?? 0;
               String baseUrl = 'https://webpristine.com/cleanup/public';
-              // Default value if null
               final profileImageUrl =
                   '${request.sender!.baseUrl}${request.sender!.image}';
               final imageProvider = (profileImageUrl == null)
                   ? AssetImage('assets/images/image27.png') as ImageProvider
                   : NetworkImage(profileImageUrl.toString()) as ImageProvider;
-              log('request id response ====>>>$requestId');
+
+              bool isAcceptLoading = _acceptLoading[requestId] ?? false;
+              bool isDeclineLoading = _declineLoading[requestId] ?? false;
+
               return Card(
                 elevation: 5,
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -98,60 +115,78 @@ class _PendingListScreenState extends State<PendingListScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(6),
                   leading: CircleAvatar(
                     backgroundImage: imageProvider,
                     backgroundColor: Colors.grey[300],
                   ),
                   title: Text(request.sender?.name ?? 'Unknown'),
                   subtitle: Text(request.sender?.username ?? 'No email'),
-                  trailing: Row(
+                  trailing: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GestureDetector(
                         onTap: () {
-                          _acceptRequest(requestId);
+                          if (!isAcceptLoading) _acceptRequest(requestId);
                         },
                         child: Container(
-                          height: 34,
-                          width: 90,
+                          height: 24,
+                          width: 80,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
                             color: AppColor.rank1Color,
                           ),
-                          child: const Center(
-                            child: Text(
-                              'Accept',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: AppColor.backgroundcontainerColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          child: Center(
+                            child: isAcceptLoading
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: AppColor.backgroundcontainerColor,
+                                      strokeWidth: 2.0,
+                                    ),
+                                  )
+                                : Text(
+                                    'Accept',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColor.backgroundcontainerColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 8), // Add spacing between buttons
+                      SizedBox(height: 3), // Add spacing between buttons
                       GestureDetector(
                         onTap: () {
-                          _declineRequest(requestId);
+                          if (!isDeclineLoading) _declineRequest(requestId);
                         },
                         child: Container(
-                          height: 34,
-                          width: 90,
+                          height: 24,
+                          width: 80,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
                             color: AppColor.rank1Color,
                           ),
-                          child: const Center(
-                            child: Text(
-                              'Decline',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: AppColor.backgroundcontainerColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          child: Center(
+                            child: isDeclineLoading
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: AppColor.backgroundcontainerColor,
+                                      strokeWidth: 2.0,
+                                    ),
+                                  )
+                                : Text(
+                                    'Decline',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: AppColor.backgroundcontainerColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

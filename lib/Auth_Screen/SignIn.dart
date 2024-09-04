@@ -345,10 +345,16 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         obscureText: ispas,
         decoration: InputDecoration(
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 20), // Adjust padding
           hintText: hint,
           hintStyle: TextStyle(color: hintTextColor),
           border: InputBorder.none,
-          prefixIcon: Icon(icon),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.symmetric(
+                vertical: 16.0), // Adjust padding for the icon
+            child: Icon(icon, size: 24),
+          ),
           suffixIcon: showSuffixIcon
               ? IconButton(
                   icon: Icon(
@@ -632,7 +638,7 @@ class _LoginScreenState extends State<LoginScreen> {
       log('Login Here-------------------- $data');
 
       if (loginSuccessful) {
-        customToast(context: context, msg: 'Login successful', type: 0);
+        // customToast(context: context, msg: 'Login successful', type: 0);
 
         // Update device token after login
         String deviceToken = pro.token; // Retrieve the actual device token

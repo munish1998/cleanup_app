@@ -45,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
     await taskProvider.fetchIncomingTasks('new');
     await taskProvider.fetchPendingTasks('pending');
     await taskProvider.fetchIncomingTasks('completed');
+    await taskProvider.pending.length;
+    //  await taskProvider.s
     // taskProvider.getToken(); // Adjust status as needed
   }
 
@@ -144,18 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     _buildTaskCard(
                       context,
-                      title: 'Pending Task',
-                      image: 'assets/images/image8.png',
-                      trailing: '${taskProvider.pendingTask.length}',
-                      trailingColor: Colors.purple,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => PendingTaskkScreen()),
-                      ),
-                    ),
-                    _buildTaskCard(
-                      context,
                       title: 'New Task',
                       image: 'assets/images/image8.png',
                       trailing: '${taskProvider.comingTask.length}',
@@ -168,14 +158,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     _buildTaskCard(
                       context,
-                      title: 'Pending request',
+                      title: 'Pending Task',
                       image: 'assets/images/image8.png',
-                      trailing: '${taskProvider.pending.length}',
-                      trailingColor: Colors.orange,
+                      trailing: '${taskProvider.pendingTask.length}',
+                      trailingColor: Colors.purple,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const PendingListScreen()),
+                            builder: (context) => PendingTaskkScreen()),
                       ),
                     ),
                     _buildTaskCard(
@@ -192,9 +182,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     _buildTaskCard(
                       context,
+                      title: 'Pending request',
+                      image: 'assets/images/image8.png',
+                      trailing: '${taskProvider.pending.length}',
+                      trailingColor: Colors.orange,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PendingListScreen()),
+                      ),
+                    ),
+                    _buildTaskCard(
+                      context,
                       title: 'Request send list',
                       image: 'assets/images/image8.png',
-                      trailing: '${taskProvider.mycompletes.length}',
+                      trailing: '${taskProvider.requestsendlist.length}',
                       trailingColor: Colors.purple,
                       onTap: () => Navigator.push(
                         context,
@@ -224,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
+        // navigatorKey: GlobalKey<NavigatorState>(),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: Padding(

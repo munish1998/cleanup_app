@@ -3,6 +3,7 @@ import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
+import 'package:cleanup_mobile/Utils/customSnackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -51,9 +52,7 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
         if (selectedFriends.length < 3) {
           selectedFriends.add(friendId);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('You can select a maximum of 3 friends.')),
-          );
+          showTopSnackBar(context, 'not share more then three friends');
         }
       }
       log('Updated selected friends: $selectedFriends');
@@ -108,14 +107,14 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
         );
       } else {
         // Show an error if the sharing was not successful
-        _showSnackBar('Failed to share the task.');
+        // _showSnackBar('Failed to share the task.');
       }
     } catch (error) {
       // Close the loading dialog in case of an error
       Navigator.of(context).pop();
 
       // Handle any errors that occur during the sharing process
-      _showSnackBar('An error occurred: ${error.toString()}');
+      // _showSnackBar('An error occurred: ${error.toString()}');
     }
   }
 
@@ -149,9 +148,9 @@ class _FriendTaskScreenState extends State<FriendTaskScreen> {
     final isSelected = selectedFriends.contains(friend.id.toString());
     final isShared = sharedFriends.contains(friend.id.toString());
 
-    final baseUrl = 'https://webpristine.com/cleanup/public/';
+    //  final baseUrl = 'https://webpristine.com/cleanup/public/';
     final profileImageUrl =
-        friend.image != null ? '$baseUrl${friend.image}' : null;
+        friend.image != null ? '${friend.baseUrl}${friend.image}' : null;
 
     log('Image URL: $profileImageUrl');
 

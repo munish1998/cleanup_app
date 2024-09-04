@@ -40,6 +40,8 @@ class ApiServices {
   static const String getsharetaskList =
       '${baseUrl}/api/auth/task/shared-task-users';
   static const String getLeaderboard = '${baseUrl}/api/auth/leaderboard';
+  static const String reportUser = '${baseUrl}/api/auth/report';
+  static const String blockUser = '${baseUrl}/api/auth/block';
   static const String privacyPolicy = '${baseUrl}user/privacy_policy';
   static const String getNotification = '${baseUrl}/api/auth/notification/list';
   static const String exercises = '${baseUrl}user/exercises';

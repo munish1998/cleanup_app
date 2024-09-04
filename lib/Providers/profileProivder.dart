@@ -50,6 +50,7 @@ class ProfileProvider with ChangeNotifier {
         if (result['success'] == true) {
           // Map the profile data from the response
           _myProfile = ProfileModel.fromJson(result['data']);
+          _populateTextControllers(); // Populate text controllers with profile data
         } else {
           // Handle error from the response
           _myProfile = null;
@@ -66,6 +67,17 @@ class ProfileProvider with ChangeNotifier {
       _myProfile = null;
       customToast(context: context, msg: 'An error occurred', type: 0);
       notifyListeners();
+    }
+  }
+
+  void _populateTextControllers() {
+    if (_myProfile != null) {
+      nameController.text = _myProfile!.name ?? '';
+      emailController.text = _myProfile!.email ?? '';
+      phoneController.text = _myProfile!.mobile ?? '';
+      locationController.text = _myProfile!.location ?? '';
+      dobController.text =
+          _myProfile!.dob ?? ''; // Adjust if the field name is different
     }
   }
 
@@ -106,6 +118,7 @@ class ProfileProvider with ChangeNotifier {
         if (result['success']) {
           final profileData = result['data'];
           _myProfile = ProfileModel.fromJson(profileData);
+          _populateTextControllers(); // Update text controllers with new profile data
           notifyListeners(); // Update the UI with new profile data
           log('Response of image update: $result');
           commonToast(
@@ -170,6 +183,7 @@ class ProfileProvider with ChangeNotifier {
         if (result['success']) {
           final profileData = result['data'];
           _myProfile = ProfileModel.fromJson(profileData);
+          _populateTextControllers(); // Update text controllers with new profile data
           notifyListeners(); // Update the UI with new profile data
           log('Response of image update: $result');
           commonToast(
@@ -226,41 +240,31 @@ class ProfileProvider with ChangeNotifier {
       log('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        // Decode the response body
-        final result = jsonDecode(response.body) as Map<String, dynamic>;
+        // Decode the response
+        final result = jsonDecode(response.body);
 
-        if (result['success']) {
-          final profileData = result['data'] as Map<String, dynamic>;
-          _myProfile = ProfileModel.fromJson(profileData);
-          notifyListeners();
-          commonToast(
-            msg: 'Profile updated successfully',
-            color: Colors.blue,
-          );
-          return true;
+        if (result['success'] == true) {
+          // Update the local profile model with the new data
+          _myProfile = ProfileModel.fromJson(result['data']);
+          _populateTextControllers(); // Update text controllers with new profile data
+          notifyListeners(); // Notify listeners to update the UI
+          Navigator.pop(context); // Close the loader dialog
+          customToast(context: context, msg: result['message'], type: 1);
+          return true; // Profile updated successfully
         } else {
-          commonToast(
-            msg: result['message'] ?? 'Failed to update profile',
-            color: Colors.red,
-          );
-          return false;
+          Navigator.pop(context); // Close the loader dialog
+          customToast(context: context, msg: result['message'], type: 0);
+          return false; // Profile update failed
         }
       } else {
-        commonToast(
-          msg: 'Failed to update profile. Status code: ${response.statusCode}',
-          color: Colors.red,
-        );
-        return false;
+        Navigator.pop(context); // Close the loader dialog
+        customToast(context: context, msg: 'Failed to update profile', type: 0);
+        return false; // Profile update failed
       }
     } catch (e) {
-      log('Error updating profile: $e');
-      commonToast(
-        msg: 'An error occurred: $e',
-        color: Colors.red,
-      );
-      return false;
-    } finally {
       Navigator.pop(context); // Close the loader dialog
+      customToast(context: context, msg: 'An error occurred: $e', type: 0);
+      return false; // Profile update failed
     }
   }
 

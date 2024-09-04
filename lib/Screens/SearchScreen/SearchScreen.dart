@@ -1,4 +1,6 @@
+import 'package:cleanup_mobile/HomeScreen/HomeScreen.dart';
 import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cleanup_mobile/Providers/homeProvider.dart';
@@ -14,6 +16,9 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   // Track which users have been requested
   Set<int> _requestedUsers = Set<int>();
+
+  // Track loading state for each user request
+  Set<int> _loadingUsers = Set<int>();
 
   // List of all users
   List<AllUserModel> _allUsers = [];
@@ -36,6 +41,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // Method to handle sending friend requests
   Future<void> _sendFriendRequest(int userId) async {
+    setState(() {
+      _loadingUsers.add(userId); // Show loading indicator
+    });
+
     try {
       await Provider.of<TaskProviders>(context, listen: false)
           .sendFriendRequest(context: context, receiverId: userId);
@@ -47,6 +56,10 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       // Handle any errors that occur during sending the request
       print('Error sending friend request: $e');
+    } finally {
+      setState(() {
+        _loadingUsers.remove(userId); // Hide loading indicator
+      });
     }
   }
 
@@ -71,7 +84,7 @@ class _SearchScreenState extends State<SearchScreen> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            navPushReplace(context: context, action: HomeScreen());
           },
         ),
       ),
@@ -124,6 +137,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   itemBuilder: (context, index) {
                     var user = _filteredUsers[index];
                     bool isRequested = _requestedUsers.contains(user.id);
+                    bool isLoading = _loadingUsers.contains(user.id);
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
@@ -141,28 +155,37 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         title: Text(user.name ?? 'No Username'),
                         subtitle: Text(user.email ?? 'No Email'),
-                        trailing: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.0),
-                          child: TextButton(
-                            onPressed: () {
-                              if (!isRequested) {
-                                _sendFriendRequest(user.id);
-                              }
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor:
-                                  isRequested ? Colors.black : Colors.white,
-                              backgroundColor:
-                                  isRequested ? Colors.grey[300] : Colors.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                        trailing: isLoading
+                            ? Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.0,
+                                ),
+                              )
+                            : Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                                child: TextButton(
+                                  onPressed: () {
+                                    if (!isRequested) {
+                                      _sendFriendRequest(user.id);
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: isRequested
+                                        ? Colors.black
+                                        : Colors.white,
+                                    backgroundColor: isRequested
+                                        ? Colors.grey[300]
+                                        : Colors.blue,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    isRequested ? 'Requested' : 'Send Request',
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              isRequested ? 'Requested' : 'Send Request',
-                            ),
-                          ),
-                        ),
                       ),
                     );
                   },

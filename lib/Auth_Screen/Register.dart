@@ -386,11 +386,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'is_admin': "0",
       };
 
-      pro.signUp(context: context, data: data).then((value) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false, // Remove all previous routes
-        );
+      pro.signUp(context: context, data: data).then((_) {
+        // This block will execute after the signUp method is complete
+        // Add additional checks if needed
+        log('SignUp successful, navigating to HomeScreen');
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => LoginScreen()),
+        // );
       }).catchError((error) {
         log('SignUp Error: $error');
         commonToast(msg: 'SignUp Error: $error', color: Colors.red);

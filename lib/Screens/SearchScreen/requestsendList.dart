@@ -43,9 +43,9 @@ class _RequestSendListState extends State<RequestSendList> {
                 leading: CircleAvatar(
                   backgroundImage: request.sender!.image != null
                       ? NetworkImage(
-                          '${request.sender!.baseUrl}${request.receiver!.image}',
+                          '${request.sender!.baseUrl}${request.receiver!.image}', // Make sure the image URL is correct
                         )
-                      : AssetImage('assets/images/default_profile.png')
+                      : AssetImage('assets/images/image29.png')
                           as ImageProvider,
                   backgroundColor: Colors.grey[300],
                   child: request.sender!.image == null
@@ -53,7 +53,7 @@ class _RequestSendListState extends State<RequestSendList> {
                       : null,
                 ),
                 title: Text(request.receiver!.name ?? 'Unknown'),
-                subtitle: Text(request.sender!.email ?? 'No email'),
+                subtitle: Text(request.receiver!.email ?? 'No email'),
                 // trailing: Text(request.status),
                 onTap: () {
                   // Handle tap if needed

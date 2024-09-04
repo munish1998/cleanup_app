@@ -95,7 +95,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   context: context,
                   builder: (BuildContext context) {
                     return Container(
-                      height: 254,
                       padding: EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,30 +157,17 @@ class CustomBottomNavigationBar extends StatelessWidget {
       onTap: () {
         Navigator.pop(context); // Close the bottom sheet
         if (text == 'Account Details') {
-          // Open bottom sheet for Account Details
-          showModalBottomSheet<void>(
-            context: context,
-            isScrollControlled: true,
-            builder: (BuildContext context) {
-              return SizedBox(
-                height: 857,
-                child: ProfileScreen(),
-              );
-            },
+          // Navigate to ProfileScreen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ProfileScreen()),
           );
         } else if (text == 'Friends List') {
-          showModalBottomSheet<void>(
-            context: context,
-            builder: (BuildContext context) {
-              return SizedBox(
-                height: 750,
-                child: FriendListScreen(
-                  taskid: '',
-                ),
-              );
-            },
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => FriendListScreen(taskid: '')),
           );
-          // Handle other menu items here
         }
       },
       child: Row(

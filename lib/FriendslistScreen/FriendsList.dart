@@ -1,13 +1,15 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'package:cleanup_mobile/Utils/AppConstant.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cleanup_mobile/Models/myfriendsModel.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
+import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:cleanup_mobile/Providers/homeProvider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:convert';
+import 'dart:developer';
+import 'package:cleanup_mobile/Providers/homeProvider.dart';
+import 'package:cleanup_mobile/Utils/AppConstant.dart';
 
 class FriendListScreen extends StatefulWidget {
   final String? taskid;
@@ -19,8 +21,9 @@ class FriendListScreen extends StatefulWidget {
 }
 
 class _FriendListScreenState extends State<FriendListScreen> {
-  List<String> selectedFriends = []; // To keep track of selected friends
   bool _isLoading = false; // Track loading state
+  List<Friends> _myfreinds = [];
+  List<Friends> get myfriends => _myfreinds;
 
   @override
   void initState() {
@@ -31,31 +34,31 @@ class _FriendListScreenState extends State<FriendListScreen> {
     });
   }
 
+  bool isUserBlocked(String userId, List<Blocked> blockedList) {
+    // Check if the blocked list contains the user ID
+    return blockedList.any((blocked) => blocked.id.toString() == userId);
+  }
+
   Future<void> unfriendUser(String userId) async {
     setState(() {
       _isLoading = true; // Show loading indicator
     });
 
-    final String baseUrl =
-        'https://webpristine.com/cleanup/public'; // Replace with your base URL
-    final String endpoint =
-        '/api/auth/unfriend/$userId'; // Append userId to endpoint
+    final String baseUrl = 'https://webpristine.com/cleanup/public';
+    final String endpoint = '/api/auth/unfriend/$userId';
     final Uri url = Uri.parse('$baseUrl$endpoint');
 
-    // Get the access token from SharedPreferences
     SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref
-        .getString(accessTokenKey); // Use the correct key for your access token
+    String? accessToken = pref.getString(accessTokenKey);
 
     if (accessToken == null) {
       print('Access token not found.');
       setState(() {
-        _isLoading = false; // Hide loading indicator
+        _isLoading = false;
       });
       return;
     }
 
-    // Create headers for the request
     final headers = {
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
@@ -64,7 +67,6 @@ class _FriendListScreenState extends State<FriendListScreen> {
     try {
       final response = await http.get(url, headers: headers);
 
-      // Log the response for debugging
       log('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
@@ -72,14 +74,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
         if (result['success']) {
           print('User unfriended successfully');
 
-          // Update the friends list in the Provider or state
           final taskProvider =
               Provider.of<TaskProviders>(context, listen: false);
-          taskProvider.removeFriend(
-              userId); // Assuming you have a method to remove a friend from the list
+          taskProvider.removeFriend(userId); // Remove friend from the list
 
-          // Optionally, you can refresh the friends list
-          // taskProvider.getmyfreindsList(context: context);
+          // Optionally, refresh the friends list
+          await taskProvider.getmyfreindsList(context: context);
         } else {
           print('Failed to unfriend user: ${result['message']}');
         }
@@ -90,10 +90,121 @@ class _FriendListScreenState extends State<FriendListScreen> {
       print('Error: $e');
     } finally {
       setState(() {
-        _isLoading = false; // Hide loading indicator
+        _isLoading = false;
       });
     }
   }
+
+  Future<void> sendReport({
+    required String userId,
+    required String reason,
+  }) async {
+    final url = Uri.parse(ApiServices.reportUser);
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({
+        'reported_user_id': userId,
+        'reason': reason,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Successfully sent the report
+      log('Report sent successfully');
+    } else {
+      // Handle error
+      log('Failed to send report: ${response.statusCode}');
+      log('Error: ${response.body}');
+    }
+  }
+
+  void _showReportDialog(String userId) {
+    final TextEditingController _reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Report User'),
+          content: TextField(
+            controller: _reasonController,
+            decoration: InputDecoration(hintText: 'Enter reason for reporting'),
+            maxLines: 3,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Submit'),
+              onPressed: () {
+                final reason = _reasonController.text;
+                if (reason.isNotEmpty) {
+                  sendReport(userId: userId, reason: reason).then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Report submitted')),
+                    );
+                    Navigator.of(context).pop(); // Close the dialog
+                  }).catchError((e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please enter a reason')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void handleMenuAction(String action, String userId) {
+    final taskProvider = Provider.of<TaskProviders>(context, listen: false);
+
+    switch (action) {
+      case 'report':
+        // Show report dialog
+        _showReportDialog(userId);
+        break;
+      case 'block':
+        // Handle block action
+        taskProvider.blockUser(receiverID: userId, context: context).then((_) {
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('User blocked successfully')),
+          // );
+          setState(() {
+            taskProvider.getmyfreindsList(
+                context: context); // Refresh friends list
+            //taskProvider.getBlockedUsers(context: context); // Refresh blocked users list
+          });
+        });
+
+        break;
+      case 'unfriend':
+        // Handle unfriend action
+        unfriendUser(userId);
+        break;
+    }
+  }
+
+  // bool isUserBlocked(String userId, List<Blocked> blockedList) {
+  //   return blockedList.any((blocked) => blocked.id.toString() == userId);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -117,12 +228,15 @@ class _FriendListScreenState extends State<FriendListScreen> {
                       itemCount: taskProvider.myfriends.length,
                       itemBuilder: (context, index) {
                         final friend = taskProvider.myfriends[index];
+                        final isBlocked = isUserBlocked(
+                          friend.id.toString(),
+                          taskProvider.blocked,
+                        );
 
-                        // Construct the full image URL if necessary
                         final baseUrl =
                             'https://webpristine.com/cleanup/public';
                         final profileImageUrl = friend.image != null
-                            ? '$baseUrl${friend.image}'
+                            ? '${friend.baseUrl}${friend.image}'
                             : null;
 
                         log('Image URL link: $profileImageUrl');
@@ -130,9 +244,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage: profileImageUrl != null
-                                ? CachedNetworkImageProvider(
-                                    profileImageUrl,
-                                  )
+                                ? CachedNetworkImageProvider(profileImageUrl)
                                 : AssetImage('assets/images/image27.png')
                                     as ImageProvider,
                             backgroundColor: Colors.grey[300],
@@ -141,31 +253,51 @@ class _FriendListScreenState extends State<FriendListScreen> {
                                 : null,
                           ),
                           title: Text(friend.name ?? 'Unknown'),
-                          subtitle: Text(friend.email ?? 'No email'),
-                          trailing: InkWell(
-                            onTap: () {
-                              unfriendUser(friend.id.toString());
-                            },
-                            child: Container(
-                              height: 44,
-                              width: 110,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  color: AppColor.rank1Color),
-                              child: const Center(
-                                child: Text(
-                                  'Unfriend',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColor.backgroundcontainerColor,
-                                      fontWeight: FontWeight.bold),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(friend.email ?? 'No email'),
+                              Container(
+                                height: 24,
+                                width: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: AppColor.rank1Color,
                                 ),
+                                child: Center(
+                                    child: Text(
+                                  isBlocked ? 'Blocked' : 'Friend',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: AppColor.backgroundcontainerColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
                               ),
-                            ),
+                            ],
                           ),
-                          onTap: () {
-                            // Handle tap
-                          },
+                          trailing: PopupMenuButton<String>(
+                            icon: Icon(Icons.more_vert),
+                            onSelected: (String action) {
+                              handleMenuAction(action, friend.id.toString());
+                            },
+                            itemBuilder: (BuildContext context) {
+                              return [
+                                PopupMenuItem<String>(
+                                  value: 'report',
+                                  child: Text('Report'),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'block',
+                                  child: Text('Block'),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'unfriend',
+                                  child: Text('Unfriend'),
+                                ),
+                              ];
+                            },
+                          ),
                         );
                       },
                     ),

@@ -21,6 +21,8 @@ import 'package:cleanup_mobile/NewTaskScreen/detailsScreen.dart';
 import 'package:cleanup_mobile/Utils/Constant.dart';
 import 'package:cleanup_mobile/Utils/commonMethod.dart';
 import 'package:cleanup_mobile/Utils/customLoader.dart';
+import 'package:cleanup_mobile/Utils/customSnackbar.dart';
+import 'package:cleanup_mobile/Utils/customredSnackbar.dart';
 import 'package:cleanup_mobile/apiServices/apiConstant.dart';
 import 'package:cleanup_mobile/apiServices/apiServices.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -51,15 +53,16 @@ class TaskProviders with ChangeNotifier {
   List<Notifications> get notifications => _notifications;
   List<RequestSendModel> _requestsendlist = [];
   List<RequestSendModel> get requestsendlist => _requestsendlist;
-  List<MyFriendsModel> _myfreinds = [];
-  List<MyFriendsModel> get myfriends => _myfreinds;
+  List<Friends> _myfreinds = [];
+  List<Friends> get myfriends => _myfreinds;
   List<CompleteTaskModel> _mycompletes = [];
   List<CompleteTaskModel> get mycompletes => _mycompletes;
   List<ComingTaskModel> _comingTask = [];
   List<ComingTaskModel> get comingTask => _comingTask;
   List<PendingTaskModel> _pendingTask = [];
   List<PendingTaskModel> get pendingTask => _pendingTask;
-
+  List<Blocked> _blocked = [];
+  List<Blocked> get blocked => _blocked;
   TextEditingController _nameController = TextEditingController();
   TextEditingController _locationController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
@@ -68,6 +71,8 @@ class TaskProviders with ChangeNotifier {
   TextEditingController _countryController = TextEditingController();
   TextEditingController _cityController = TextEditingController();
   TextEditingController _areaController = TextEditingController();
+  TextEditingController _reportmessageController = TextEditingController();
+  TextEditingController get reportmessageController => _reportmessageController;
   TextEditingController get nameController => _nameController;
   TextEditingController get locationController => _locationController;
   TextEditingController get discriptionController => _descriptionController;
@@ -87,6 +92,199 @@ class TaskProviders with ChangeNotifier {
 
   int _taskCount = 0;
   int get taskCount => _taskCount;
+
+  Future<void> getmyfreindsList({required BuildContext context}) async {
+    var url = Uri.parse(ApiServices.myFreinds);
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    Map<String, String> headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      log('Response of myfreindlist: ${response.body}');
+      log('AccessToken: ${accessToken ?? "not found"}');
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+        MyFriendsModel myFriendsModel = MyFriendsModel.fromJson(jsonResponse);
+
+        _myfreinds = myFriendsModel.friends ?? [];
+        // _blocked = myFriendsModel.blocked ?? [];
+
+        log('Friends list response: $_myfreinds');
+        log('Blocked list response: $_blocked');
+
+        notifyListeners(); // Notify listeners if using Provider
+      } else {
+        _myfreinds = [];
+        _blocked = [];
+        customToast(context: context, msg: 'Server error', type: 0);
+      }
+    } catch (e) {
+      log('Error: $e');
+      _myfreinds = [];
+      _blocked = [];
+      customToast(context: context, msg: 'An error occurred', type: 0);
+    }
+  }
+
+  bool isUserBlocked(String userId, List<Blocked> blockedList) {
+    return blockedList.any((blocked) => blocked.id.toString() == userId);
+  }
+
+  Future<void> blockUser({
+    required String receiverID,
+    required BuildContext context,
+  }) async {
+    final url = Uri.parse(ApiServices.blockUser);
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    if (accessToken == null) {
+      log('Access token not found.');
+      customToast(
+        context: context,
+        msg: 'Failed to block user. No access token.',
+        type: 0,
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode({
+          'blocked_user_id': receiverID,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        log('User blocked successfully');
+        showTopSnackBar(context, 'User blocked successfully');
+        // SnackBar(content: ,)
+        _blocked.add(Blocked(id: int.parse(receiverID), name: 'User Name'));
+        // Assuming Friends and Blocked are correctly defined models
+        // final blockedUser = Friends(
+        //   id: int.parse(receiverID),
+        //   name: 'Unknown', // You might want to set a name if available
+        // );
+
+        // Adding blocked user to blocked list
+        // _blocked.add(Blocked(
+        //   id: blockedUser.id,
+        //   name: blockedUser.name ?? 'Unknown',
+        // ));
+
+        // log('Block user response ===>>>> ${blockedUser.name}');
+
+        // Optionally remove the user from the friends list
+        _myfreinds.removeWhere((friend) => friend.id.toString() == receiverID);
+
+        notifyListeners(); // Notify listeners after updating the state
+
+        customToast(
+          context: context,
+          msg: response.body,
+          type: 1,
+        );
+      } else {
+        log('Failed to block user: ${response.statusCode}');
+        log('Error: ${response.body}');
+        customToast(
+          context: context,
+          msg: response.body,
+          type: 0,
+        );
+      }
+    } catch (e) {
+      log('Error: $e');
+      customToast(
+        context: context,
+        msg: 'An error occurred while blocking the user',
+        type: 0,
+      );
+    }
+  }
+
+  Future<void> sendReport({
+    required String userId,
+    required String reason,
+  }) async {
+    final url = Uri.parse(ApiServices.reportUser);
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    final String? accessToken = pref.getString(accessTokenKey);
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode({
+        'reported_user_id': userId,
+        'reason': reason,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // log('')
+      // Successfully sent the report
+      log('useid response===>>>$userId');
+      log('Report sent successfully===>>>>$response');
+    } else {
+      // Handle error
+      log('Failed to send report: ${response.statusCode}');
+      log('Error: ${response.body}');
+    }
+  }
+
+  void removeFriend(String userId) {
+    myfriends.removeWhere((friend) => friend.id == userId);
+    notifyListeners(); // Notify listeners to update the UI
+  }
+
+  Future<void> fetchTaskCount(String taskId) async {
+    final String url =
+        '${ApiServices.baseUrl}/api/auth/task/shared-count/$taskId';
+
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    String? accessToken = pref.getString(accessTokenKey);
+
+    if (accessToken == null) {
+      throw Exception('Authorization token is missing.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        _taskCount = responseData['count'];
+        log('task count response ===>>>$_taskCount'); // Extract the count from the response
+        notifyListeners(); // Notify listeners to update the UI
+      } else {
+        throw Exception('Failed to fetch task count.');
+      }
+    } catch (e) {
+      print('Error fetching task count: $e');
+      throw Exception('An error occurred while fetching the task count.');
+    }
+  }
 
   Future<void> getsharetaskList({
     required BuildContext context,
@@ -216,31 +414,41 @@ class TaskProviders with ChangeNotifier {
       if (response.statusCode == 200) {
         var responseBody = jsonDecode(response.body);
         if (responseBody['success']) {
+          showTopSnackBar(context, 'share task successfully');
+          // Show success message in Snackbar
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text('Task shared successfully!'),
+          //     backgroundColor: Colors.green,
+          //   ),
+          // );
           // Return true to indicate success
           return true;
         } else {
-          // Handle the case where the task has already been shared with the friend
-          if (responseBody['error'] != null &&
-              responseBody['error'].contains('already shared this task')) {
-            customToast(context: context, msg: responseBody['error'], type: 0);
-          } else {
-            customToast(
-                context: context, msg: responseBody['message'], type: 0);
-          }
+          // Handle error message
+          final message = responseBody['message'] ?? 'An error occurred';
+          showredTopSnackBar(context, response.body);
           // Return false to indicate failure
           return false;
         }
       } else {
-        customToast(
-            context: context,
-            msg: 'Server error: ${response.statusCode}',
-            type: 0);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(' ${response.body}'),
+            backgroundColor: Colors.red,
+          ),
+        );
         // Return false to indicate failure
         return false;
       }
     } catch (e) {
       log('Error: $e');
-      customToast(context: context, msg: 'An error occurred', type: 0);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred'),
+          backgroundColor: Colors.red,
+        ),
+      );
       // Return false to indicate failure
       return false;
     }
@@ -277,44 +485,6 @@ class TaskProviders with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
-    }
-  }
-
-  void removeFriend(String userId) {
-    myfriends.removeWhere((friend) => friend.id.toString() == userId);
-    notifyListeners(); // Notify listeners to update the UI
-  }
-
-  Future<void> fetchTaskCount(String taskId) async {
-    final String url =
-        '${ApiServices.baseUrl}/api/auth/task/shared-count/$taskId';
-
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-
-    if (accessToken == null) {
-      throw Exception('Authorization token is missing.');
-    }
-
-    try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        _taskCount = responseData['count'];
-        log('task count response ===>>>$_taskCount'); // Extract the count from the response
-        notifyListeners(); // Notify listeners to update the UI
-      } else {
-        throw Exception('Failed to fetch task count.');
-      }
-    } catch (e) {
-      print('Error fetching task count: $e');
-      throw Exception('An error occurred while fetching the task count.');
     }
   }
 
@@ -386,28 +556,32 @@ class TaskProviders with ChangeNotifier {
 
           // Navigate to FriendListScreen with the task ID
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    FriendTaskScreen(taskid: taskId.toString()),
-              ),
-            );
+            navPushReplace(
+                context: context,
+                action: FriendTaskScreen(taskid: taskId.toString()));
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(
+            //     builder: (context) =>
+            //         FriendTaskScreen(taskid: taskId.toString()),
+            //   ),
+            // );
           });
 
           return true; // Task created successfully
         } else {
+          showredTopSnackBar(context, response.body);
           commonToast(msg: result['message'], color: Colors.red);
           return false; // Task creation failed
         }
       } else {
         print('Failed to create task. Status code: ${response.statusCode}');
         print('Response body: ${response.body}');
-        commonToast(msg: 'Failed to create task', color: Colors.red);
+        showredTopSnackBar(context, response.body);
         return false; // Task creation failed
       }
     } catch (e) {
       print('Error: $e');
-      commonToast(msg: 'An error occurred', color: Colors.red);
+      //  showredTopSnackBar(context, response.body);
       return false; // Task creation failed
     } finally {
       navPop(context: context);
@@ -446,11 +620,15 @@ class TaskProviders with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final taskDetails = json.decode(response.body);
-        log('Response from accept task: $taskDetails');
+        final responseData = json.decode(response.body);
+        log('Response from accept task: $responseData');
+
+        // Extract the message from the response
+        final String message =
+            responseData['message'] ?? 'Task accepted successfully!';
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task accepted successfully!')),
+          SnackBar(content: Text(response.body)),
         );
 
         // Update the state or notify listeners if needed
@@ -461,8 +639,8 @@ class TaskProviders with ChangeNotifier {
         log('Failed to update task. Status code: ${response.statusCode}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Failed to update task. Status code: ${response.statusCode}')),
+              content:
+                  Text('Failed to update task. Status code: ${response.body}')),
         );
       }
     } catch (e) {
@@ -503,17 +681,11 @@ class TaskProviders with ChangeNotifier {
         final taskDetails = json.decode(response.body);
         log('Response from accept task: $taskDetails');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Decline Task!')),
-        );
+        showTopSnackBar(context, 'request decline');
 
         // You may want to update the state or notify listeners here
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Failed to update task. Status code: ${response.statusCode}')),
-        );
+        showredTopSnackBar(context, response.body);
       }
     } catch (e) {
       log('Error updating task: $e');
@@ -548,7 +720,11 @@ class TaskProviders with ChangeNotifier {
       if (response.statusCode == 200) {
         // Parse the response body as a list of user objects
         List<dynamic> userList = jsonDecode(response.body);
-
+        customToast(
+          context: context,
+          msg: response.body,
+          type: 1,
+        );
         _requestsendlist = userList
             .map((userData) => RequestSendModel.fromJson(userData))
             .toList();
@@ -557,7 +733,7 @@ class TaskProviders with ChangeNotifier {
       } else {
         // Handle server error
         _requestsendlist = [];
-        customToast(context: context, msg: 'Server error', type: 0);
+        customToast(context: context, msg: response.body, type: 0);
       }
     } catch (e) {
       log('Error: $e');
@@ -665,14 +841,10 @@ class TaskProviders with ChangeNotifier {
 
       if (response.statusCode == 200) {
         // Successfully accepted the task
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Task accepted successfully!')),
-        );
+        showTopSnackBar(context, response.body);
       } else {
         // Handle errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to accept task.')),
-        );
+        showredTopSnackBar(context, 'accept task successfully');
       }
     } catch (e) {
       // Handle any errors
@@ -867,11 +1039,10 @@ class TaskProviders with ChangeNotifier {
         var responseBody = jsonDecode(response.body);
         if (responseBody['success']) {
           // Handle successful friend request
-          customToast(context: context, msg: responseBody['message'], type: 1);
+          showTopSnackBar(context, 'freind request send successfuly');
         } else {
           // Handle failed friend request
-          customToast(
-              context: context, msg: 'Failed to send friend request', type: 0);
+          showredTopSnackBar(context, response.body);
         }
       } else {
         // Handle server error
@@ -957,19 +1128,13 @@ class TaskProviders with ChangeNotifier {
       if (response.statusCode == 200) {
         var responseBody = jsonDecode(response.body);
         if (responseBody['success']) {
-          customToast(context: context, msg: responseBody['message'], type: 1);
+          showTopSnackBar(context, 'aceept friend request successfuly');
           await getpendingRequest(context: context); // Refresh pending requests
         } else {
-          customToast(
-              context: context,
-              msg: 'Failed to accept friend request',
-              type: 0);
+          showredTopSnackBar(context, response.body);
         }
       } else {
-        customToast(
-            context: context,
-            msg: 'Server error: ${response.statusCode}',
-            type: 0);
+        showredTopSnackBar(context, response.body);
       }
     } catch (e) {
       log('Error: $e');
@@ -999,65 +1164,16 @@ class TaskProviders with ChangeNotifier {
       if (response.statusCode == 200) {
         var responseBody = jsonDecode(response.body);
         if (responseBody['success']) {
-          customToast(context: context, msg: responseBody['message'], type: 1);
+          showTopSnackBar(context, response.body);
           await getpendingRequest(context: context); // Refresh pending requests
         } else {
-          customToast(
-              context: context,
-              msg: 'Failed to decline friend request',
-              type: 0);
+          showredTopSnackBar(context, 'decline friend request successfully');
         }
       } else {
-        customToast(
-            context: context,
-            msg: 'Server error: ${response.statusCode}',
-            type: 0);
+        showredTopSnackBar(context, response.body);
       }
     } catch (e) {
       log('Error: $e');
-      customToast(context: context, msg: 'An error occurred', type: 0);
-    }
-  }
-
-  Future<void> getmyfreindsList({
-    required BuildContext context,
-  }) async {
-    var url = Uri.parse(ApiServices.myFreinds);
-
-    // Retrieve the access token from SharedPreferences
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    String? accessToken = pref.getString(accessTokenKey);
-
-    // Create headers with Authorization
-    Map<String, String> headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      // Make the GET request with headers
-      final response = await http.get(url, headers: headers);
-
-      //  log('Response status: ${response.statusCode}');
-      log('Response of myfreindlist: ${response.body}');
-      log('accesstoken=====>>>${pref.getString(accessTokenKey).toString()}');
-      if (response.statusCode == 200) {
-        // Parse the response body as a list of user objects
-        List<dynamic> userList = jsonDecode(response.body);
-
-        _myfreinds = userList
-            .map((userData) => MyFriendsModel.fromJson(userData))
-            .toList();
-        log('userlist response ====>>>>$_myfreinds');
-        notifyListeners(); // Notify listeners if using Provider
-      } else {
-        // Handle server error
-        _allUser = [];
-        customToast(context: context, msg: 'Server error', type: 0);
-      }
-    } catch (e) {
-      log('Error: $e');
-      _allUser = [];
       customToast(context: context, msg: 'An error occurred', type: 0);
     }
   }
@@ -1120,16 +1236,16 @@ class TaskProviders with ChangeNotifier {
         var result = jsonDecode(response.body);
         if (result['success']) {
           notifyListeners();
-          commonToast(msg: result['message'], color: Colors.blue);
+          showTopSnackBar(context, response.body);
           return true; // Task created successfully
         } else {
-          commonToast(msg: result['message'], color: Colors.red);
+          showredTopSnackBar(context, response.body);
           return false; // Task creation failed
         }
       } else {
         print('Failed to create task. Status code: ${response.statusCode}');
         print('Response body: ${response.body}');
-        commonToast(msg: 'Failed to create task', color: Colors.red);
+        showredTopSnackBar(context, response.body);
         return false; // Task creation failed
       }
     } catch (e) {
